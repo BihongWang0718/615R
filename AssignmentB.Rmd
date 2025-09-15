@@ -1,0 +1,227 @@
+---
+title: "Assignment B"
+output: html_document
+date: "2025-09-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Exercise 1.Vectors
+##Problem 1
+```{r}
+#(a) Sequence from 1 to 20
+a1 <- 1:20
+a1
+```
+
+```{r}
+#(b)Sequence form 20 to 1
+a2 <-20:1
+a2
+```
+
+```{r}
+#(c)Sequence fron 1 to 20 then 19 to 1
+a3 <- c(1:20, 19:1)
+a3
+```
+
+```{r}
+#(d) (4, 6, 3) and assign it to the name tmp.
+tmp<-c(4,6,3)
+tmp
+```
+
+```{r}
+#(e) repeat until 10th 4
+a5 <- rep(c(4, 6, 3), 10)
+a5
+```
+
+```{r}
+#(f)
+a6 <- c(rep(c(4, 6, 3), 10), 4)
+a6
+
+```
+
+```{r}
+#(g)
+a7 <- c(rep(4, 10), rep(6, 20), rep(3, 30))
+a7
+```
+
+##Problem 2
+```{r}
+x<-seq(3,6,by=0.1)
+b<-exp(x)*cos(x)
+b
+```
+##Problem 3
+```{r}
+#3(1) 
+x1 <- 0.1^(3 * (1:12))
+x2 <- 0.2^(seq(1, 34, by = 3))
+c1 <- x1 * x2
+c1
+```
+
+```{r}
+#3(2)
+k <- 1:25
+c2 <- 2^k / k
+c2
+```
+##Problem 4
+```{r}
+i1 <- 10:100
+S1 <- sum(i1^3 + 4 * i1^2)
+S1
+```
+
+```{r}
+#4(b)
+i2 <- 1:25
+S2 <- sum( (2^i2)/i2 + (3^i2)/(i2^2) )
+S2
+```
+##Probelm 5
+```{r}
+labels <- paste("label", 1:30)
+labels
+fns <- paste("fn", 1:30, sep = "")
+fns
+
+```
+
+##Probelm 8
+```{r}
+fracs <- (2*(1:19)) / (2*(1:19) + 1)
+terms <- cumprod(fracs)
+S <- 1 + sum(terms)
+S
+```
+
+#Exerice 2:Matrix
+##problem1
+```{r}
+A <- matrix(c(1, 5, -2,
+              1, 2, -1,
+              3, 6, -3),
+            nrow = 3, byrow = TRUE)
+A2 <- A %*% A
+A3 <- A %*% A2
+A2
+A3
+```
+
+```{r}
+B <- matrix(c(1, 5, -2,
+              1, 2, -1,
+              3, 6, -3),
+            nrow = 3, byrow = TRUE)
+
+B[,3] <- B[,2] + B[,3]
+B
+```
+
+###probelm 2
+```{r}
+# 创建矩阵 B (15 行，每行是 10 -10 10)
+B2 <- matrix(rep(c(10, -10, 10), each = 15), ncol = 3)
+
+# 计算 B^T B
+B2tB2 <- crossprod(B)
+B2tB2
+```
+
+##probelm 3
+```{r}
+matC1 <- matrix(0, nrow = 6, ncol = 6)
+matC1
+row(matC1)
+col(matC1)
+matC2 <- (abs(row(matC1) - col(matC1)) == 1) * 1
+matC2
+```
+
+##probelm 4
+```{r}
+x <- 0:4
+y <- 0:4
+
+D <- outer(x, y, FUN = "+")
+D
+```
+
+##problem 6
+```{r}
+
+y <- c(7, -1, -3, 5, 17)
+
+first_row <- 1:5
+E <- toeplitz(first_row)
+x <- solve(E, y)
+x
+
+```
+
+##problem 7
+```{r}
+#a
+set.seed(75)
+aMat <- matrix(sample(10, size = 60, replace = TRUE), nr = 6)
+aMat
+rowSums(aMat > 4)
+#b
+count7 <- rowSums(aMat == 7)
+which(count7 == 2)
+```
+
+```{r}
+#c
+set.seed(75)
+aMat <- matrix(sample(10, size = 60, replace = TRUE), nr = 6)
+pairs_all <- expand.grid(1:ncol(aMat), 1:ncol(aMat))
+
+col_sums <- sapply(1:nrow(pairs_all), function(i) {
+  idx <- as.numeric(pairs_all[i, ])
+  sum(aMat[, idx[1]] + aMat[, idx[2]])
+})
+
+pairs_gt75 <- as.matrix(pairs_all[col_sums > 75, ])
+pairs_gt75
+```
+
+#Exercise 3:function
+##problem1
+```{r}
+tmpFn1 <- function(xVec) {
+  n <- length(xVec)
+  xVec / (1:n)     
+}
+tmpFn2 <- function(xVec) {
+  n <- length(xVec)
+  xVec^(1:n) / (1:n)  
+}
+#b
+tmpFn3 <- function(x, n) {
+  if (n <= 0) stop("n must be a strictly positive integer")
+  1 + sum(x^(1:n) / (1:n))
+}
+
+
+```
+
+```{r}
+doubleOdds <- function(mat) {
+  odd_idx <- (mat %% 2 != 0)
+  mat[odd_idx] <- mat[odd_idx] * 2
+  return(mat)
+}
+
+
+
+```
