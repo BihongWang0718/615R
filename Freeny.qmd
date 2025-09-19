@@ -18,9 +18,11 @@ head(freeny)
 
 ## Introduction
 
-The Freeny dataset is a built-in dataset in R that contains 39 monthly observations of economic variables related to revenue. The main variable of interest is revenue (y), and it is accompanied by three predictors: price index, income level, and market potential.
+The Freeny dataset is a built-in dataset in R that contains 39 monthly observations of economic variables related to revenue. The main variable of interest is revenue (y), and it is accompanied by three predictors: price index, income level, and market potential.Revenue, representing the company’s monthly income, is our dependent variable. It shows an overall increasing trend over time. Price Index is an indicator of the general level of goods or service prices, which can be used to assess how price changes affect revenue. Income Level reflects the average income of consumers in the target market, and purchasing power is strongly associated with income. Market Potential measures the size or potential demand of the market, representing the overall capacity of the industry; a larger market potential implies the possibility of higher future revenue. These three variables can be used to predict and analyze the upward or downward trends in revenue.
 
 ```{r}
+
+
 library(ggplot2)
 ggplot(freeny, aes(x = 1:nrow(freeny), y = y)) +
   geom_line(color = "blue") +
