@@ -1,0 +1,43 @@
+---
+title: "Visualization of the Freeny Dataset"
+author: "Bihong Wang"
+format: pdf
+---
+
+```{r}
+
+data("freeny")
+
+
+str(freeny)
+
+
+head(freeny)
+
+```
+
+## Introduction
+
+The Freeny dataset is a built-in dataset in R that contains 39 monthly observations of economic variables related to revenue. The main variable of interest is revenue (y), and it is accompanied by three predictors: price index, income level, and market potential.
+
+```{r}
+library(ggplot2)
+ggplot(freeny, aes(x = 1:nrow(freeny), y = y)) +
+  geom_line(color = "blue") +
+  labs(title = "Freeny Revenue Time Series",
+       x = "Time (months)", y = "Revenue")
+ggplot(freeny, aes(x = price.index, y = y)) +
+  geom_point(color = "red", size = 2) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  labs(title = "Revenue vs Price Index",
+       x = "Price Index", y = "Revenue") +
+  theme_classic()
+
+```
+
+## Conclusion
+
+From the time series plot, we can see that revenue shows a steady upward trend over the 39 months, with only minor waves. This indicates continuous growth in the underlying economic environment. The scatter plot between revenue and price index further reveals a strong positive correlation: as the price index increases, revenue also rises. This suggests that price levels are an important explanatory factor for revenue. Overall, the Freeny dataset highlights both a clear time trend and meaningful economic relationships, making it useful for regression and time series modeling.
+
+```{}
+```
