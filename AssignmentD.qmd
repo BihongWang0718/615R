@@ -1,0 +1,370 @@
+---
+title: "Assignment D"
+format: html
+editor: visual
+---
+
+```{r}
+library(nycflights13)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+#1 Had an arrival delay of two or more hours
+flights %>%
+  filter(arr_delay >= 120)
+
+```
+
+```{r}
+#2 Flew to Houston (IAH or HOU)
+flights %>%
+  filter(dest %in% c("IAH", "HOU"))
+
+
+```
+
+```{r}
+#3 Were operated by United, American, or Delta
+flights %>%
+  filter(carrier %in% c("UA", "AA", "DL"))
+```
+
+```{r}
+#4 Departed in summer (July, August, and September)
+flights %>%
+  filter(month %in% c(7, 8, 9))
+
+```
+
+```{r}
+#5 Arrived more than two hours late but didn’t leave late
+flights %>%
+  filter(arr_delay > 120, dep_delay <= 0)
+```
+
+```{r}
+#6 Were delayed by at least an hour, but made up over 30 minutes in flight
+flights %>%
+  filter(dep_delay >= 60, (dep_delay - arr_delay) > 30)
+
+```
+
+## problem 4
+
+```{r}
+library(nycflights13)
+library(dplyr)
+library(ggplot2)
+
+# Count the number of flights per day
+daily_flights <- flights %>%
+  group_by(year, month, day) %>%
+  summarise(n = n(), .groups = "drop")
+
+# Check if there are any days with zero flights
+any_zero_days <- any(daily_flights$n == 0)
+any_zero_days  # FALSE means there was at least one flight every day
+
+# List the days with zero flights (if any)
+daily_flights %>%
+  filter(n == 0)
+
+# Visualization: number of flights per day in 2013
+ggplot(daily_flights, aes(x = as.Date(sprintf("%d-%02d-%02d", year, month, day)), y = n)) +
+  geom_line(color = "steelblue") +
+  labs(title = "Number of NYC Flights per Day in 2013",
+       x = "Date",
+       y = "Number of Flights") +
+  theme_minimal()
+
+```
+
+## problem 5
+
+```{r}
+
+# Flight(s) with the farthest distance
+farthest <- flights %>%
+  filter(distance == max(distance, na.rm = TRUE))
+
+# Flight(s) with the shortest distance
+shortest <- flights %>%
+  filter(distance == min(distance, na.rm = TRUE))
+
+farthest
+shortest
+
+```
+
+# Exercise3.3.5
+
+## problem 1
+
+```{r}
+hm_to_min <- function(x) {
+  hour <- x %/% 100
+  minute <- x %% 100
+  hour * 60 + minute
+}
+
+flights_check <- flights %>%
+  filter(!is.na(dep_time), !is.na(sched_dep_time)) %>%
+  mutate(
+    dep_time_min = hm_to_min(dep_time),
+    sched_dep_time_min = hm_to_min(sched_dep_time),
+    recomputed_delay = dep_time_min - sched_dep_time_min,
+    # fix overnight issue: if recomputed < -1000, add 1440 minutes
+    recomputed_delay = if_else(recomputed_delay < -1000,
+                               recomputed_delay + 1440,
+                               recomputed_delay),
+    diff = recomputed_delay - dep_delay
+  )
+
+summary(flights_check$diff)
+
+```
+
+## problem 4
+
+```{r}
+variables <- c("year", "month", "day", "dep_delay", "arr_delay")
+
+# Example 1: using any_of() - safe, skips missing vars
+flights %>%
+  select(any_of(variables)) %>%
+  head()
+
+# Example 2: what happens if a variable name is wrong
+bad_vars <- c("year", "month", "day", "arr_dlay")  # typo: arr_delay -> arr_dlay
+
+# any_of(): will quietly skip the missing column
+flights %>%
+  select(any_of(bad_vars)) %>%
+  head()
+
+# all_of(): will throw an error if any column is missing
+
+
+```
+
+# Exercise3.3.7
+
+## problem 1
+
+```{r}
+library(nycflights13)
+library(dplyr)
+library(ggplot2)
+
+# 1. Average arrival delay by carrier
+avg_delay <- flights %>%
+  group_by(carrier) %>%
+  summarise(
+    mean_arr_delay = mean(arr_delay, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(mean_arr_delay))
+
+print(avg_delay)
+
+# Plot: average delay by carrier
+ggplot(avg_delay, aes(x = reorder(carrier, mean_arr_delay), y = mean_arr_delay)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Average Arrival Delay by Carrier (NYC 2013)",
+       x = "Carrier",
+       y = "Mean Arrival Delay (minutes)") +
+  theme_minimal()
+
+
+# 2. Carrier × destination delays
+carrier_dest_delay <- flights %>%
+  group_by(carrier, dest) %>%
+  summarise(
+    mean_delay = mean(arr_delay, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  )
+
+# Weighted average (accounting for # of flights per destination)
+weighted_delays <- carrier_dest_delay %>%
+  group_by(carrier) %>%
+  summarise(weighted_mean_delay = weighted.mean(mean_delay, n), .groups = "drop") %>%
+  arrange(desc(weighted_mean_delay))
+
+print(weighted_delays)
+
+
+# 3. Compare carriers at the same destination
+# This shows whether a "bad carrier" is still worse at the same airport
+dest_carrier_compare <- flights %>%
+  group_by(dest, carrier) %>%
+  summarise(mean_delay = mean(arr_delay, na.rm = TRUE),
+            n = n(),
+            .groups = "drop") %>%
+  arrange(dest, desc(mean_delay))
+
+head(dest_carrier_compare, 20)  # show top few
+
+
+# 4. Visualization: mean delay by carrier, faceted by destination
+ggplot(dest_carrier_compare, aes(x = reorder(carrier, mean_delay), y = mean_delay, fill = carrier)) +
+  geom_col() +
+  facet_wrap(~ dest, scales = "free_y") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title = "Average Arrival Delays by Carrier and Destination",
+       x = "Carrier",
+       y = "Mean Arrival Delay (minutes)")
+
+```
+
+## problem 2
+
+```{r}
+
+
+# Find the most delayed departure for each destination
+worst_dep_by_dest <- flights %>%
+  filter(!is.na(dep_delay)) %>%
+  group_by(dest) %>%
+  slice_max(order_by = dep_delay, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(year, month, day, carrier, flight, origin, dest,
+         sched_dep_time, dep_time, dep_delay, arr_delay)
+
+print(worst_dep_by_dest)
+
+```
+
+## problem4
+
+```{r}
+
+df <- tibble(x = c(5, 2, 8, 1, 9))
+
+# 1. Positive n with slice_min(): pick the 2 smallest values
+df %>% slice_min(x, n = 2)
+# Expected: rows with x = 1, 2
+
+# 2. Negative n with slice_min(): drop the 2 smallest values
+df %>% slice_min(x, n = -2)
+# Expected: rows with x = 5, 8, 9
+
+# 3. Positive n with slice_max(): pick the 2 largest values
+df %>% slice_max(x, n = 2)
+# Expected: rows with x = 9, 8
+
+# 4. Negative n with slice_max(): drop the 2 largest values
+df %>% slice_max(x, n = -2)
+# Expected: rows with x = 5, 2, 1
+
+
+# Positive n: find the 5 most delayed departures
+flights %>%
+  filter(!is.na(dep_delay)) %>%
+  slice_max(dep_delay, n = 5) %>%
+  select(year, month, day, carrier, flight, origin, dest,
+         sched_dep_time, dep_time, dep_delay)
+
+# Negative n: drop the 5 most delayed departures, keep the rest
+flights %>%
+  filter(!is.na(dep_delay)) %>%
+  slice_max(dep_delay, n = -5) %>%
+  summarise(total_remaining = n())
+
+```
+
+## Problem 6
+
+### a
+
+```{r}
+df <- tibble(
+  x = 1:5,
+  y = c("a", "b", "a", "a", "b"),
+  z = c("K", "K", "L", "L", "K")
+)
+df
+```
+
+```{r}
+df |>
+  group_by(y)
+
+```
+
+so the data will be the same, but grouping information is added.
+
+### b
+
+```{r}
+df <- tibble(
+  x = 1:5,
+  y = c("a", "b", "a", "a", "b"),
+  z = c("K", "K", "L", "L", "K")
+)
+
+df
+
+```
+
+```{r}
+df |> arrange(y)
+
+```
+
+Arrange() reorders the rows of the data frame according to the values of one or more columns.
+
+### c
+
+We expect to see a 2x2 table.
+
+```{r}
+
+df |>
+  group_by(y) |>
+  summarize(mean_x = mean(x))
+
+
+```
+
+group_by(y) tells R to treat rows with the same value of y as belonging to the same group, and summarize(mean_x = mean(x)) then calculates the mean of x within each group. The result is a collapsed summary table that contains one row per group along with the group labels and their corresponding summary statistics.
+
+### D
+
+```{r}
+df |>
+  group_by(y, z) |>
+  summarize(mean_x = mean(x))
+
+
+```
+
+group_by(y, z) divides the data into groups defined by each unique combination of y and z, and summarize(mean_x = mean(x)) then calculates the mean of x within each group. The result is a summary tibble where each row corresponds to a unique (y, z) pair along with its calculated group statistic.
+
+### E
+
+```{r}
+df |>
+  group_by(y, z) |>
+  summarize(mean_x = mean(x), .groups = "drop")
+
+```
+
+group_by(y, z) creates subgroups based on each unique combination of y and z, and summarize(mean_x = mean(x), .groups = "drop") computes the mean of x within each subgroup while removing all grouping information from the result. The final output is a simple tibble with one row per (y, z) pair and no residual grouping.
+
+### F
+
+```{r}
+df |>
+  group_by(y, z) |>
+  mutate(mean_x = mean(x))
+
+
+```
+
+The summarize() pipeline collapses each group into a single row, producing a smaller tibble with one row per (y, z) combination, while the mutate() pipeline keeps the original number of rows and simply adds a new column containing the group’s mean repeated across all rows in that group. In other words, summarize() reduces the data, whereas mutate() augments it by attaching group statistics without changing the row count.

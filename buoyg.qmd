@@ -1,0 +1,113 @@
+---
+title: "Buoy Temperature Trends (1985-2024)"
+format: html
+---
+
+## Research Question
+
+How has sea surface temperature changed in Boston waters over the past 40 years, and does the warming trend vary by season?
+
+```{r setup, message=FALSE, warning=FALSE}
+library(data.table)
+library(dplyr) 
+library(lubridate)
+library(ggplot2)
+
+# Load buoy data
+load_buoy_data <- function(year)  {
+  url <- paste0("https://www.ndbc.noaa.gov/view_text_file.php?filename=44013h",
+                year, ".txt.gz&dir=data/historical/stdmet/")
+  header <- scan(url, what = 'character', nlines = 1, quiet = TRUE)
+  buoy <- fread(url, header = FALSE, skip = 2, fill = TRUE)
+  setnames(buoy, header)
+  return(buoy)
+}
+all_data <- lapply(1985:2024, function(year) {
+  tryCatch(load_buoy_data(year), error = function(e) NULL)
+})
+buoy_data <- rbindlist(all_data, fill = TRUE)
+
+# Data cleaning
+buoy_data <- buoy_data %>%
+  mutate(
+    YYYY = coalesce(as.character(YYYY), as.character(`#YY`), as.character(YY)),
+    WTMP = na_if(as.numeric(WTMP), 999),
+    datetime = ymd_h(paste(YYYY, MM, DD, hh), quiet = TRUE),
+    Year = year(datetime),
+    Month = month(datetime),
+    Season = case_when(
+      Month %in% c(12, 1, 2) ~ "Winter",
+      Month %in% 3:5 ~ "Spring",
+      Month %in% 6:8 ~ "Summer",
+      Month %in% 9:11 ~ "Fall"
+    )
+  ) %>%
+  filter(!is.na(WTMP) & !is.na(datetime))
+
+# Filter complete years (≥50% data)
+complete_years <- buoy_data %>%
+  group_by(Year) %>%
+  summarise(n = n()) %>%
+  filter(n >= 4380) %>%
+  pull(Year)
+buoy_data <- filter(buoy_data, Year %in% complete_years)
+```
+
+## Seasonal Temperature Trends
+
+```{r plot, fig.width=10, fig.height=6, message=FALSE}
+seasonal_avg <- buoy_data %>%
+  group_by(Year, Season) %>%
+  summarise(avg_temp = mean(WTMP, na.rm = TRUE), n = n(), .groups = 'drop') %>%
+  filter(n >= 100)
+
+seasonal_avg$Season <- factor(seasonal_avg$Season, 
+                               levels = c("Winter", "Spring", "Summer", "Fall"))
+
+ggplot(seasonal_avg, aes(x = Year, y = avg_temp, color = Season)) +
+  geom_point(alpha = 0.6, size = 2) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 1.2) +
+  scale_color_manual(values = c("Winter" = "#2E86AB", "Spring" = "#A23B72",
+                                 "Summer" = "#F18F01", "Fall" = "#C73E1D")) +
+  labs(
+    title = "Sea Surface Temperature Trends by Season (1985-2024)",
+    subtitle = "NDBC Buoy 44013 - Boston Harbor",
+    x = "Year",
+    y = "Water Temperature (°C)"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+
+
+\newpage
+
+## Key Findings
+
+```{r analysis}
+# Warming rates by season
+warming_rates <- seasonal_avg %>%
+  group_by(Season) %>%
+  summarise(
+    temp_1990 = mean(avg_temp[Year <= 1990]),
+    temp_2020 = mean(avg_temp[Year >= 2020]),
+    change = temp_2020 - temp_1990,
+    pct_change = (change / temp_1990) * 100)
+
+overall <- buoy_data %>% # Overall warming
+  group_by(Year) %>% summarise(annual_avg = mean(WTMP)) %>%
+  summarise( early = mean(annual_avg[Year <= 1990]),
+    recent = mean(annual_avg[Year >= 2020]), total_change = recent - early)
+print(warming_rates)
+cat(sprintf("\nOverall change: %.2f°C (from %.2f°C to %.2f°C)\n", 
+            overall$total_change, overall$early, overall$recent))
+```
+
+**1. Significant warming detected**: Boston waters warmed by **2.05°C** over 40 years.
+
+**2. Winter warming dominates**: Winter temperatures increased by **2.73°C (63%)**, far exceeding other seasons. This has major implications for marine ecosystems adapted to cold winters.
+
+**3. Seasonal differences**: Winter: +2.73°C (largest absolute and relative change). Fall: +2.37°C. Summer: +1.96°C (smallest relative change at 12%). Spring: +1.87°C
+
+**4. Ecosystem impacts**: The disproportionate winter warming disrupts seasonal temperature patterns that marine species depend on for migration, reproduction, and survival. This is consistent with broader Gulf of Maine warming trends, one of the fastest-warming ocean regions globally.
