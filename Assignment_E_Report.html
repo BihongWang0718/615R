@@ -1,0 +1,2100 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Assignment E</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Assignment_E_Report_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Assignment_E_Report_files/libs/quarto-html/quarto.js"></script>
+<script src="Assignment_E_Report_files/libs/quarto-html/popper.min.js"></script>
+<script src="Assignment_E_Report_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Assignment_E_Report_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Assignment_E_Report_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Assignment_E_Report_files/libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Assignment_E_Report_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Assignment_E_Report_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Assignment_E_Report_files/libs/bootstrap/bootstrap-1bc8a17f135ab3d594c857e9f48e611b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Assignment E</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<ol type="1">
+<li><strong>World Development Bank Data (WDBD)</strong> - economic indicators with years stored as columns</li>
+<li><strong>MovieLens Data</strong> - movie information with multiple values in single cells</li>
+</ol>
+<p>The analysis follows tidy data principles where:</p>
+<ul>
+<li>Each variable forms a column</li>
+<li>Each observation forms a row</li>
+<li>Each value has its own cell</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required libraries</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create output directory for cleaned data</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"clean_data"</span>, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Set global options</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">echo =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">message =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">warning =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">fig.width =</span> <span class="dv">10</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">fig.height =</span> <span class="dv">6</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="part-1-world-development-bank-data" class="level1">
+<h1>Part 1: World Development Bank Data</h1>
+<section id="identifying-messy-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="identifying-messy-aspects">1.1 Identifying Messy Aspects</h2>
+<p>The WDBD.csv dataset has several issues that violate tidy data principles:</p>
+<ol type="1">
+<li><strong>Wide format</strong>: Years (2018-2024) are stored as separate columns instead of as values in a single Year column</li>
+<li><strong>Trailing metadata</strong>: The file contains documentation and unit information at the bottom, mixed with the data</li>
+<li><strong>Multiple variables per row</strong>: Each row contains multiple year observations for a single indicator</li>
+<li><strong>Unit inconsistencies</strong>: Different indicators use different units (%, US$, counts) not explicitly marked in the data</li>
+<li><strong>Missing value notation</strong>: Empty strings and “..” both represent missing values</li>
+</ol>
+</section>
+<section id="importing-and-cleaning" class="level2">
+<h2 class="anchored" data-anchor-id="importing-and-cleaning">1.2 Importing and Cleaning</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import the dataset</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>wdbd_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../WDBD.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Preview the structure</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Raw dataset dimensions:"</span>, <span class="fu">dim</span>(wdbd_raw), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Raw dataset dimensions: 3031 11 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Column names:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Column names:</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">names</span>(wdbd_raw), <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Country Name"  "Country Code"  "Series Name"   "Series Code"  
+ [5] "2018 [YR2018]" "2019 [YR2019]" "2020 [YR2020]" "2021 [YR2021]"
+ [9] "2022 [YR2022]" "2023 [YR2023]" "2024 [YR2024]"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove metadata rows at the bottom</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># These are rows without valid 3-letter country codes</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>wdbd_clean <span class="ot">&lt;-</span> wdbd_raw <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(<span class="st">`</span><span class="at">Country Code</span><span class="st">`</span>, <span class="st">"^[A-Z]{3}$"</span>))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"After removing metadata rows:"</span>, <span class="fu">dim</span>(wdbd_clean), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>After removing metadata rows: 2976 11 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Countries:"</span>, <span class="fu">n_distinct</span>(wdbd_clean<span class="sc">$</span><span class="st">`</span><span class="at">Country Code</span><span class="st">`</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Countries: 62 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Series (indicators):"</span>, <span class="fu">n_distinct</span>(wdbd_clean<span class="sc">$</span><span class="st">`</span><span class="at">Series Code</span><span class="st">`</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Series (indicators): 48 </code></pre>
+</div>
+</div>
+</section>
+<section id="reshaping-to-tidy-format" class="level2">
+<h2 class="anchored" data-anchor-id="reshaping-to-tidy-format">1.3 Reshaping to Tidy Format</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify year columns (they follow pattern: YYYY [YRYYYY])</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>year_cols <span class="ot">&lt;-</span> <span class="fu">names</span>(wdbd_clean) <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_subset</span>(<span class="st">"^</span><span class="sc">\\</span><span class="st">d{4} </span><span class="sc">\\</span><span class="st">[YR</span><span class="sc">\\</span><span class="st">d{4}</span><span class="sc">\\</span><span class="st">]$"</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Year columns found:"</span>, <span class="fu">length</span>(year_cols), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Year columns found: 7 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Years:"</span>, year_cols[<span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Years: 2018 [YR2018] 2019 [YR2019] 2020 [YR2020] 2021 [YR2021] 2022 [YR2022] 2023 [YR2023] 2024 [YR2024]</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pivot longer: gather year columns into a single Year column</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>wdbd_long <span class="ot">&lt;-</span> wdbd_clean <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">all_of</span>(year_cols),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"Year"</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"Value"</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Extract 4-digit year from column name</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Year =</span> <span class="fu">as.integer</span>(<span class="fu">str_extract</span>(Year, <span class="st">"</span><span class="sc">\\</span><span class="st">d{4}"</span>)),</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Convert Value to numeric (handles ".." and empty strings as NA)</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">Value =</span> <span class="fu">as.numeric</span>(Value)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Display summary</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Tidy dataset dimensions:"</span>, <span class="fu">dim</span>(wdbd_long), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Tidy dataset dimensions: 20832 6 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(wdbd_long))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Country Name       Country Code       Series Name        Series Code       
+ Length:20832       Length:20832       Length:20832       Length:20832      
+ Class :character   Class :character   Class :character   Class :character  
+ Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+                                                                            
+                                                                            
+                                                                            
+                                                                            
+      Year          Value           
+ Min.   :2018   Min.   :-1.325e+10  
+ 1st Qu.:2019   1st Qu.: 8.000e+00  
+ Median :2021   Median : 5.800e+01  
+ Mean   :2021   Mean   : 4.973e+09  
+ 3rd Qu.:2023   3rd Qu.: 1.000e+02  
+ Max.   :2024   Max.   : 2.870e+12  
+                NA's   :12652       </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Preview the tidy dataset</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>wdbd_long <span class="sc">%&gt;%</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="st">`</span><span class="at">Country Name</span><span class="st">`</span>, <span class="st">`</span><span class="at">Series Name</span><span class="st">`</span>, Year, Value) <span class="sc">%&gt;%</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"First 10 rows of tidy WDBD data"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>First 10 rows of tidy WDBD data</caption>
+<colgroup>
+<col style="width: 12%">
+<col style="width: 77%">
+<col style="width: 4%">
+<col style="width: 5%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Country Name</th>
+<th style="text-align: left;">Series Name</th>
+<th style="text-align: right;">Year</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking, rural (% of rural population)</td>
+<td style="text-align: right;">2018</td>
+<td style="text-align: right;">14.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking, rural (% of rural population)</td>
+<td style="text-align: right;">2019</td>
+<td style="text-align: right;">15.6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking, rural (% of rural population)</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">16.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking, rural (% of rural population)</td>
+<td style="text-align: right;">2021</td>
+<td style="text-align: right;">17.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking, rural (% of rural population)</td>
+<td style="text-align: right;">2022</td>
+<td style="text-align: right;">18.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking, rural (% of rural population)</td>
+<td style="text-align: right;">2023</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking, rural (% of rural population)</td>
+<td style="text-align: right;">2024</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking (% of population)</td>
+<td style="text-align: right;">2018</td>
+<td style="text-align: right;">31.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking (% of population)</td>
+<td style="text-align: right;">2019</td>
+<td style="text-align: right;">32.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Access to clean fuels and technologies for cooking (% of population)</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">33.8</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="handling-units-of-measure" class="level2">
+<h2 class="anchored" data-anchor-id="handling-units-of-measure">1.4 Handling Units of Measure</h2>
+<p>Different indicators use different units. We can classify units based on the Series Name and Series Code:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a unit classification function</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>classify_unit <span class="ot">&lt;-</span> <span class="cf">function</span>(series_name, series_code) {</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">case_when</span>(</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(series_name, <span class="st">"%"</span>) <span class="sc">|</span> <span class="fu">str_detect</span>(series_code, <span class="st">"</span><span class="sc">\\</span><span class="st">.ZS$"</span>) <span class="sc">~</span> <span class="st">"Percentage"</span>,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(series_name, <span class="st">"US</span><span class="sc">\\</span><span class="st">$|current"</span>) <span class="sc">|</span> <span class="fu">str_detect</span>(series_code, <span class="st">"</span><span class="sc">\\</span><span class="st">.CD$"</span>) <span class="sc">~</span> <span class="st">"Currency (US$)"</span>,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(series_name, <span class="st">"per 1,?000"</span>) <span class="sc">~</span> <span class="st">"Rate per 1,000"</span>,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(series_name, <span class="st">"per 100"</span>) <span class="sc">~</span> <span class="st">"Rate per 100"</span>,</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Other/Count"</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Add unit classification</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>wdbd_long <span class="ot">&lt;-</span> wdbd_long <span class="sc">%&gt;%</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Unit =</span> <span class="fu">classify_unit</span>(<span class="st">`</span><span class="at">Series Name</span><span class="st">`</span>, <span class="st">`</span><span class="at">Series Code</span><span class="st">`</span>))</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the cleaned and tidy WDBD dataset</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(wdbd_long, <span class="st">"clean_data/wdbd_tidy.csv"</span>)</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Saved tidy WDBD dataset to: clean_data/wdbd_tidy.csv</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Saved tidy WDBD dataset to: clean_data/wdbd_tidy.csv</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Show unit distribution</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>wdbd_long <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Unit) <span class="sc">%&gt;%</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n)) <span class="sc">%&gt;%</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Distribution of measurement units"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Distribution of measurement units</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Unit</th>
+<th style="text-align: right;">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Percentage</td>
+<td style="text-align: right;">14322</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Other/Count</td>
+<td style="text-align: right;">5208</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Currency (US$)</td>
+<td style="text-align: right;">868</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Rate per 1,000</td>
+<td style="text-align: right;">434</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="data-quality-checks" class="level2">
+<h2 class="anchored" data-anchor-id="data-quality-checks">1.5 Data Quality Checks</h2>
+<section id="missing-values-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="missing-values-analysis">Missing Values Analysis</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate missingness by series</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>missingness <span class="ot">&lt;-</span> wdbd_long <span class="sc">%&gt;%</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(<span class="st">`</span><span class="at">Series Code</span><span class="st">`</span>, <span class="st">`</span><span class="at">Series Name</span><span class="st">`</span>, Unit) <span class="sc">%&gt;%</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Total_Obs =</span> <span class="fu">n</span>(),</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(Value)),</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing_Pct =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> Missing <span class="sc">/</span> Total_Obs, <span class="dv">1</span>),</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(Missing_Pct))</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Save missingness analysis</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(missingness, <span class="st">"clean_data/wdbd_missingness.csv"</span>)</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Top 10 series with highest missingness</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>missingness <span class="sc">%&gt;%</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="st">`</span><span class="at">Series Name</span><span class="st">`</span>, Total_Obs, Missing, Missing_Pct) <span class="sc">%&gt;%</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Top 10 indicators with highest missing data percentage"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Top 10 indicators with highest missing data percentage</caption>
+<colgroup>
+<col style="width: 75%">
+<col style="width: 8%">
+<col style="width: 6%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Series Name</th>
+<th style="text-align: right;">Total_Obs</th>
+<th style="text-align: right;">Missing</th>
+<th style="text-align: right;">Missing_Pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Disaster risk reduction progress score (1-5 scale; 5=best)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Average working hours of children, study and work, female, ages 7-14 (hours per week)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Average working hours of children, study and work, male, ages 7-14 (hours per week)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Average working hours of children, study and work, ages 7-14 (hours per week)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Average working hours of children, working only, female, ages 7-14 (hours per week)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Average working hours of children, working only, male, ages 7-14 (hours per week)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Average working hours of children, working only, ages 7-14 (hours per week)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">100.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Adjusted net enrollment rate, primary, female (% of primary school age children)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">424</td>
+<td style="text-align: right;">97.7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Adjusted net enrollment rate, primary, male (% of primary school age children)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">424</td>
+<td style="text-align: right;">97.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Adequacy of unemployment benefits and ALMP (% of total welfare of beneficiary households)</td>
+<td style="text-align: right;">434</td>
+<td style="text-align: right;">424</td>
+<td style="text-align: right;">97.7</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="out-of-range-values-for-percentages" class="level3">
+<h3 class="anchored" data-anchor-id="out-of-range-values-for-percentages">Out-of-Range Values for Percentages</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check percentage values outside [0, 100]</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>out_of_range <span class="ot">&lt;-</span> wdbd_long <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Unit <span class="sc">==</span> <span class="st">"Percentage"</span>, <span class="sc">!</span><span class="fu">is.na</span>(Value)) <span class="sc">%&gt;%</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Value <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">|</span> Value <span class="sc">&gt;</span> <span class="dv">100</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">nrow</span>(out_of_range) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Save out-of-range values</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_csv</span>(out_of_range, <span class="st">"clean_data/wdbd_out_of_range.csv"</span>)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"Found"</span>, <span class="fu">nrow</span>(out_of_range), <span class="st">"percentage values outside [0, 100]</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  out_of_range <span class="sc">%&gt;%</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="st">`</span><span class="at">Country Name</span><span class="st">`</span>, <span class="st">`</span><span class="at">Series Name</span><span class="st">`</span>, Year, Value) <span class="sc">%&gt;%</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Sample of out-of-range percentage values"</span>)</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"All percentage values are within valid [0, 100] range</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Found 63 percentage values outside [0, 100]</code></pre>
+</div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Sample of out-of-range percentage values</caption>
+<colgroup>
+<col style="width: 17%">
+<col style="width: 61%">
+<col style="width: 6%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Country Name</th>
+<th style="text-align: left;">Series Name</th>
+<th style="text-align: right;">Year</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Afghanistan</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2021</td>
+<td style="text-align: right;">-19.505734</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Argentina</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2018</td>
+<td style="text-align: right;">-5.606847</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Argentina</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2019</td>
+<td style="text-align: right;">-5.094532</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Argentina</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">-7.836383</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Bhutan</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">-4.579493</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Canada</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">-7.425972</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Costa Rica</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">-4.693479</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ecuador</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2018</td>
+<td style="text-align: right;">-2.978351</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ecuador</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">-5.041996</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">El Salvador</td>
+<td style="text-align: left;">Adjusted net national income (annual % growth)</td>
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">-9.942253</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="exploratory-visualizations" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-visualizations">1.6 Exploratory Visualizations</h2>
+<section id="access-to-electricity-over-time" class="level3">
+<h3 class="anchored" data-anchor-id="access-to-electricity-over-time">Access to Electricity Over Time</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter for electricity access indicator</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>electricity <span class="ot">&lt;-</span> wdbd_long <span class="sc">%&gt;%</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="st">`</span><span class="at">Series Code</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"EG.ELC.ACCS.ZS"</span>, <span class="sc">!</span><span class="fu">is.na</span>(Value))</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Global trend</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>electricity_trend <span class="ot">&lt;-</span> electricity <span class="sc">%&gt;%</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Year) <span class="sc">%&gt;%</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Mean_Access =</span> <span class="fu">mean</span>(Value, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(electricity_trend, <span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> Mean_Access)) <span class="sc">+</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#2563eb"</span>, <span class="at">size =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"#2563eb"</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Global Mean Access to Electricity Over Time"</span>,</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Average across all countries"</span>,</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Year"</span>,</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"% of Population with Electricity Access"</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Assignment_E_Report_files/figure-html/electricity-viz-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="summary-statistics" class="level3">
+<h3 class="anchored" data-anchor-id="summary-statistics">Summary Statistics</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Overall summary</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>wdbd_summary <span class="ot">&lt;-</span> wdbd_long <span class="sc">%&gt;%</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Total_Rows =</span> <span class="fu">n</span>(),</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Countries =</span> <span class="fu">n_distinct</span>(<span class="st">`</span><span class="at">Country Code</span><span class="st">`</span>),</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Indicators =</span> <span class="fu">n_distinct</span>(<span class="st">`</span><span class="at">Series Code</span><span class="st">`</span>),</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Years =</span> <span class="fu">n_distinct</span>(Year),</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Year_Range =</span> <span class="fu">paste</span>(<span class="fu">min</span>(Year), <span class="st">"-"</span>, <span class="fu">max</span>(Year)),</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">Non_Missing =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(Value)),</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(Value)),</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing_Pct =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> Missing <span class="sc">/</span> (Non_Missing <span class="sc">+</span> Missing), <span class="dv">1</span>)</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>(wdbd_summary) <span class="sc">%&gt;%</span></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="st">"Metric"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Metric"</span>, <span class="st">"Value"</span>),</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">caption =</span> <span class="st">"WDBD Dataset Summary Statistics"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>WDBD Dataset Summary Statistics</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Total_Rows</td>
+<td style="text-align: left;">20832</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Countries</td>
+<td style="text-align: left;">62</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Indicators</td>
+<td style="text-align: left;">48</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Years</td>
+<td style="text-align: left;">7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Year_Range</td>
+<td style="text-align: left;">2018 - 2024</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Non_Missing</td>
+<td style="text-align: left;">8180</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Missing</td>
+<td style="text-align: left;">12652</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Missing_Pct</td>
+<td style="text-align: left;">60.7</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<hr>
+</section>
+</section>
+</section>
+<section id="part-2-movies-data-movielens" class="level1">
+<h1>Part 2: Movies Data (MovieLens)</h1>
+<section id="identifying-messy-aspects-1" class="level2">
+<h2 class="anchored" data-anchor-id="identifying-messy-aspects-1">2.1 Identifying Messy Aspects</h2>
+<p>The movies.csv file has several tidy data violations:</p>
+<ol type="1">
+<li><strong>Multiple values in one cell</strong>: The <code>genres</code> column contains multiple pipe-separated values (e.g., “Action|Adventure|Sci-Fi”)</li>
+<li><strong>Year embedded in title</strong>: Release year is stored within the title string instead of a separate column</li>
+<li><strong>Inconsistent genre notation</strong>: Some movies have “(no genres listed)” instead of proper NA values</li>
+</ol>
+</section>
+<section id="importing-movies-data" class="level2">
+<h2 class="anchored" data-anchor-id="importing-movies-data">2.2 Importing Movies Data</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import movies dataset</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>movies_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../AssignE/movies.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Movies dataset dimensions:"</span>, <span class="fu">dim</span>(movies_raw), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Movies dataset dimensions: 4000 3 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(movies_raw, <span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Original movies data structure"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Original movies data structure</caption>
+<colgroup>
+<col style="width: 10%">
+<col style="width: 60%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">movieId</th>
+<th style="text-align: left;">title</th>
+<th style="text-align: left;">genres</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">182337</td>
+<td style="text-align: left;">Cinétracts (1968)</td>
+<td style="text-align: left;">(no genres listed)</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">195495</td>
+<td style="text-align: left;">Familia (2005)</td>
+<td style="text-align: left;">Drama</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3078</td>
+<td style="text-align: left;">Liberty Heights (1999)</td>
+<td style="text-align: left;">Drama</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">134704</td>
+<td style="text-align: left;">Comedy Central Roast of Charlie Sheen (2011)</td>
+<td style="text-align: left;">Comedy</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">219976</td>
+<td style="text-align: left;">47 Hours to Live (2019)</td>
+<td style="text-align: left;">Horror|Thriller</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="tidying-movies-data" class="level2">
+<h2 class="anchored" data-anchor-id="tidying-movies-data">2.3 Tidying Movies Data</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract year from title and create clean title</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>movies_tidy <span class="ot">&lt;-</span> movies_raw <span class="sc">%&gt;%</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Extract year (4 digits in parentheses at end)</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> <span class="fu">as.integer</span>(<span class="fu">str_extract</span>(title, <span class="st">"</span><span class="sc">\\</span><span class="st">((</span><span class="sc">\\</span><span class="st">d{4})</span><span class="sc">\\</span><span class="st">)$"</span>) <span class="sc">%&gt;%</span> <span class="fu">str_extract</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">d{4}"</span>)),</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">clean_title =</span> <span class="fu">str_remove</span>(title, <span class="st">"</span><span class="sc">\\</span><span class="st">s*</span><span class="sc">\\</span><span class="st">(</span><span class="sc">\\</span><span class="st">d{4}</span><span class="sc">\\</span><span class="st">)</span><span class="sc">\\</span><span class="st">s*$"</span>)</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Handle missing genres</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">genres =</span> <span class="fu">ifelse</span>(genres <span class="sc">==</span> <span class="st">"(no genres listed)"</span>, <span class="cn">NA_character_</span>, genres)) <span class="sc">%&gt;%</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Split genres and create one row per genre</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_rows</span>(genres, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">|"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Rename for clarity</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">genre =</span> genres)</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Tidy movies dimensions:"</span>, <span class="fu">dim</span>(movies_tidy), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Tidy movies dimensions: 7083 5 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Unique movies:"</span>, <span class="fu">n_distinct</span>(movies_tidy<span class="sc">$</span>movieId), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Unique movies: 4000 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Unique genres:"</span>, <span class="fu">n_distinct</span>(movies_tidy<span class="sc">$</span>genre, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Unique genres: 19 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the tidy movies dataset</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(movies_tidy, <span class="st">"clean_data/movies_tidy.csv"</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Saved tidy movies dataset to: clean_data/movies_tidy.csv</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Saved tidy movies dataset to: clean_data/movies_tidy.csv</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(movies_tidy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 5
+  movieId title                                        genre    year clean_title
+    &lt;dbl&gt; &lt;chr&gt;                                        &lt;chr&gt;   &lt;int&gt; &lt;chr&gt;      
+1  182337 Cinétracts (1968)                            &lt;NA&gt;     1968 Cinétracts 
+2  195495 Familia (2005)                               Drama    2005 Familia    
+3    3078 Liberty Heights (1999)                       Drama    1999 Liberty He…
+4  134704 Comedy Central Roast of Charlie Sheen (2011) Comedy   2011 Comedy Cen…
+5  219976 47 Hours to Live (2019)                      Horror   2019 47 Hours t…
+6  219976 47 Hours to Live (2019)                      Thrill…  2019 47 Hours t…</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Movies without genres</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>no_genre <span class="ot">&lt;-</span> movies_raw <span class="sc">%&gt;%</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(genres <span class="sc">==</span> <span class="st">"(no genres listed)"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(movieId, title)</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Save movies with no genres</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(no_genre, <span class="st">"clean_data/movies_no_genre.csv"</span>)</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Movies with no genres listed:"</span>, <span class="fu">nrow</span>(no_genre), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Movies with no genres listed: 335 </code></pre>
+</div>
+</div>
+</section>
+<section id="genre-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="genre-distribution">2.4 Genre Distribution</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Count movies per genre</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>genre_counts <span class="ot">&lt;-</span> movies_tidy <span class="sc">%&gt;%</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(genre)) <span class="sc">%&gt;%</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(genre, <span class="at">sort =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(genre_counts, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(genre, n), <span class="at">y =</span> n)) <span class="sc">+</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"#8b5cf6"</span>) <span class="sc">+</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Number of Movies by Genre"</span>,</span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Note: Movies can have multiple genres"</span>,</span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Number of Movies"</span></span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Assignment_E_Report_files/figure-html/genre-distribution-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="part-3-extended-analysis-with-movielens-data" class="level1">
+<h1>Part 3: Extended Analysis with MovieLens Data</h1>
+<section id="ratings-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="ratings-analysis">3.1 Ratings Analysis</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import ratings</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>ratings_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../AssignE/ratings.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Ratings dataset dimensions:"</span>, <span class="fu">dim</span>(ratings_raw), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Ratings dataset dimensions: 32000204 4 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Unique users:"</span>, <span class="fu">n_distinct</span>(ratings_raw<span class="sc">$</span>userId), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Unique users: 200948 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Unique movies rated:"</span>, <span class="fu">n_distinct</span>(ratings_raw<span class="sc">$</span>movieId), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Unique movies rated: 84432 </code></pre>
+</div>
+</div>
+<section id="average-rating-and-count-per-movie" class="level3">
+<h3 class="anchored" data-anchor-id="average-rating-and-count-per-movie">Average Rating and Count per Movie</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute per-movie statistics</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>movie_ratings <span class="ot">&lt;-</span> ratings_raw <span class="sc">%&gt;%</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(movieId) <span class="sc">%&gt;%</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">rating_count =</span> <span class="fu">n</span>(),</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">rating_mean =</span> <span class="fu">mean</span>(rating, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">rating_sd =</span> <span class="fu">sd</span>(rating, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Save movie ratings summary</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(movie_ratings, <span class="st">"clean_data/movie_ratings_summary.csv"</span>)</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Saved movie ratings summary to: clean_data/movie_ratings_summary.csv</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Saved movie ratings summary to: clean_data/movie_ratings_summary.csv</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary statistics</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(movie_ratings) <span class="sc">%&gt;%</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Summary of movie rating statistics"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Summary of movie rating statistics</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">movieId</th>
+<th style="text-align: left;">rating_count</th>
+<th style="text-align: left;">rating_mean</th>
+<th style="text-align: left;">rating_sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Min. : 1</td>
+<td style="text-align: left;">Min. : 1</td>
+<td style="text-align: left;">Min. :0.500</td>
+<td style="text-align: left;">Min. :0.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"></td>
+<td style="text-align: left;">1st Qu.:109374</td>
+<td style="text-align: left;">1st Qu.: 2</td>
+<td style="text-align: left;">1st Qu.:2.543</td>
+<td style="text-align: left;">1st Qu.:0.741</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Median :166596</td>
+<td style="text-align: left;">Median : 5</td>
+<td style="text-align: left;">Median :3.071</td>
+<td style="text-align: left;">Median :0.968</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Mean :157209</td>
+<td style="text-align: left;">Mean : 379</td>
+<td style="text-align: left;">Mean :3.005</td>
+<td style="text-align: left;">Mean :0.964</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"></td>
+<td style="text-align: left;">3rd Qu.:213536</td>
+<td style="text-align: left;">3rd Qu.: 25</td>
+<td style="text-align: left;">3rd Qu.:3.500</td>
+<td style="text-align: left;">3rd Qu.:1.157</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Max. :292757</td>
+<td style="text-align: left;">Max. :102929</td>
+<td style="text-align: left;">Max. :5.000</td>
+<td style="text-align: left;">Max. :3.182</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"></td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA’s :18607</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="distribution-of-ratings" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-ratings">Distribution of Ratings</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Overall rating distribution</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>rating_dist <span class="ot">&lt;-</span> ratings_raw <span class="sc">%&gt;%</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(rating)</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(rating_dist, <span class="fu">aes</span>(<span class="at">x =</span> rating, <span class="at">y =</span> n)) <span class="sc">+</span></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"#6366f1"</span>) <span class="sc">+</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribution of All Ratings"</span>,</span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Rating"</span>,</span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Count"</span></span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Assignment_E_Report_files/figure-html/ratings-distribution-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="ratings-over-time" class="level3">
+<h3 class="anchored" data-anchor-id="ratings-over-time">Ratings Over Time</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert timestamp to date and aggregate by month</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>ratings_timeline <span class="ot">&lt;-</span> ratings_raw <span class="sc">%&gt;%</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">date =</span> <span class="fu">as_datetime</span>(timestamp),</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">month =</span> <span class="fu">floor_date</span>(date, <span class="st">"month"</span>)</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(month) <span class="sc">%&gt;%</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">rating_count =</span> <span class="fu">n</span>(),</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_rating =</span> <span class="fu">mean</span>(rating, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ratings_timeline, <span class="fu">aes</span>(<span class="at">x =</span> month, <span class="at">y =</span> rating_count)) <span class="sc">+</span></span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#ef4444"</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> comma) <span class="sc">+</span></span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Rating Activity Over Time"</span>,</span>
+<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Month"</span>,</span>
+<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Number of Ratings"</span></span>
+<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb57-22"><a href="#cb57-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Assignment_E_Report_files/figure-html/ratings-over-time-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="tags-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="tags-analysis">3.2 Tags Analysis</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import and analyze tags</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>tags_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../AssignE/tags.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Tags dataset dimensions:"</span>, <span class="fu">dim</span>(tags_raw), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Tags dataset dimensions: 2000072 4 </code></pre>
+</div>
+</div>
+<section id="most-common-tags" class="level3">
+<h3 class="anchored" data-anchor-id="most-common-tags">Most Common Tags</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean and count tags</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>top_tags <span class="ot">&lt;-</span> tags_raw <span class="sc">%&gt;%</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tag =</span> <span class="fu">str_to_lower</span>(<span class="fu">str_trim</span>(tag))) <span class="sc">%&gt;%</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(tag, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">20</span>)</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Save top tags</span></span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(top_tags, <span class="st">"clean_data/top_tags.csv"</span>)</span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(top_tags, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(tag, n), <span class="at">y =</span> n)) <span class="sc">+</span></span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"#10b981"</span>) <span class="sc">+</span></span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Top 20 Most Common Tags"</span>,</span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Count"</span></span>
+<span id="cb60-17"><a href="#cb60-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb60-18"><a href="#cb60-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb60-19"><a href="#cb60-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Assignment_E_Report_files/figure-html/top-tags-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="links-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="links-analysis">3.3 Links Analysis</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import links dataset</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>links_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../AssignE/links.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for missing identifiers</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>missing_links_summary <span class="ot">&lt;-</span> links_raw <span class="sc">%&gt;%</span></span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Total =</span> <span class="fu">n</span>(),</span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing_imdbId =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(imdbId)),</span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing_tmdbId =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(tmdbId)),</span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing_Either =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(imdbId) <span class="sc">|</span> <span class="fu">is.na</span>(tmdbId))</span>
+<span id="cb61-11"><a href="#cb61-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb61-12"><a href="#cb61-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-13"><a href="#cb61-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Save detailed missing links data</span></span>
+<span id="cb61-14"><a href="#cb61-14" aria-hidden="true" tabindex="-1"></a>missing_links_detail <span class="ot">&lt;-</span> links_raw <span class="sc">%&gt;%</span></span>
+<span id="cb61-15"><a href="#cb61-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">is.na</span>(imdbId) <span class="sc">|</span> <span class="fu">is.na</span>(tmdbId))</span>
+<span id="cb61-16"><a href="#cb61-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-17"><a href="#cb61-17" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(missing_links_detail, <span class="st">"clean_data/missing_links.csv"</span>)</span>
+<span id="cb61-18"><a href="#cb61-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-19"><a href="#cb61-19" aria-hidden="true" tabindex="-1"></a>missing_links_summary <span class="sc">%&gt;%</span></span>
+<span id="cb61-20"><a href="#cb61-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Missing external identifiers in links.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Missing external identifiers in links.csv</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Total</th>
+<th style="text-align: right;">Missing_imdbId</th>
+<th style="text-align: right;">Missing_tmdbId</th>
+<th style="text-align: right;">Missing_Either</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">87585</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">124</td>
+<td style="text-align: right;">124</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><strong>Note on links.csv</strong>: This file provides external identifiers (IMDb and TMDb IDs) that could be used to enrich the dataset by joining with external movie databases for additional metadata like budgets, director information, or detailed cast lists.</p>
+<hr>
+</section>
+</section>
+<section id="part-4-cross-dataset-analysis" class="level1">
+<h1>Part 4: Cross-Dataset Analysis</h1>
+<section id="genre-rating-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="genre-rating-patterns">4.1 Genre-Rating Patterns</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Join movies and ratings to explore genre patterns</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>genre_ratings <span class="ot">&lt;-</span> movies_tidy <span class="sc">%&gt;%</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(genre)) <span class="sc">%&gt;%</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(movie_ratings, <span class="at">by =</span> <span class="st">"movieId"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(genre) <span class="sc">%&gt;%</span></span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">movie_count =</span> <span class="fu">n_distinct</span>(movieId),</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_ratings =</span> <span class="fu">sum</span>(rating_count),</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_rating =</span> <span class="fu">mean</span>(rating_mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_rating))</span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Save genre ratings analysis</span></span>
+<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(genre_ratings, <span class="st">"clean_data/genre_ratings.csv"</span>)</span>
+<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a>genre_ratings <span class="sc">%&gt;%</span></span>
+<span id="cb62-17"><a href="#cb62-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">caption =</span> <span class="st">"Genre statistics with average ratings"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Genre statistics with average ratings</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">genre</th>
+<th style="text-align: right;">movie_count</th>
+<th style="text-align: right;">total_ratings</th>
+<th style="text-align: right;">avg_rating</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Film-Noir</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">11427</td>
+<td style="text-align: right;">3.44</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Documentary</td>
+<td style="text-align: right;">400</td>
+<td style="text-align: right;">18771</td>
+<td style="text-align: right;">3.37</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">IMAX</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">116933</td>
+<td style="text-align: right;">3.26</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Musical</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">111366</td>
+<td style="text-align: right;">3.21</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">War</td>
+<td style="text-align: right;">107</td>
+<td style="text-align: right;">165632</td>
+<td style="text-align: right;">3.16</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Drama</td>
+<td style="text-align: right;">1502</td>
+<td style="text-align: right;">839375</td>
+<td style="text-align: right;">3.12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Romance</td>
+<td style="text-align: right;">467</td>
+<td style="text-align: right;">406189</td>
+<td style="text-align: right;">3.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Animation</td>
+<td style="text-align: right;">205</td>
+<td style="text-align: right;">192533</td>
+<td style="text-align: right;">3.08</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Crime</td>
+<td style="text-align: right;">310</td>
+<td style="text-align: right;">219993</td>
+<td style="text-align: right;">3.03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Children</td>
+<td style="text-align: right;">211</td>
+<td style="text-align: right;">193553</td>
+<td style="text-align: right;">3.01</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Comedy</td>
+<td style="text-align: right;">1041</td>
+<td style="text-align: right;">657782</td>
+<td style="text-align: right;">3.01</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Western</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: right;">36547</td>
+<td style="text-align: right;">2.99</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Adventure</td>
+<td style="text-align: right;">258</td>
+<td style="text-align: right;">449312</td>
+<td style="text-align: right;">2.98</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Mystery</td>
+<td style="text-align: right;">172</td>
+<td style="text-align: right;">164205</td>
+<td style="text-align: right;">2.96</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Fantasy</td>
+<td style="text-align: right;">176</td>
+<td style="text-align: right;">140252</td>
+<td style="text-align: right;">2.89</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Thriller</td>
+<td style="text-align: right;">498</td>
+<td style="text-align: right;">466343</td>
+<td style="text-align: right;">2.88</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Action</td>
+<td style="text-align: right;">418</td>
+<td style="text-align: right;">455204</td>
+<td style="text-align: right;">2.85</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sci-Fi</td>
+<td style="text-align: right;">192</td>
+<td style="text-align: right;">283387</td>
+<td style="text-align: right;">2.71</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Horror</td>
+<td style="text-align: right;">391</td>
+<td style="text-align: right;">105992</td>
+<td style="text-align: right;">2.53</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(genre_ratings, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(genre, avg_rating), <span class="at">y =</span> avg_rating)) <span class="sc">+</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"#f59e0b"</span>) <span class="sc">+</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Average Rating by Genre"</span>,</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Based on mean of per-movie average ratings"</span>,</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Average Rating"</span></span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Assignment_E_Report_files/figure-html/genre-ratings-plot-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="top-rated-movies" class="level2">
+<h2 class="anchored" data-anchor-id="top-rated-movies">4.2 Top-Rated Movies</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify top-rated movies (with minimum rating threshold)</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>min_ratings <span class="ot">&lt;-</span> <span class="dv">500</span></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure consistent types and one row per movie for joining</span></span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>movies_reference <span class="ot">&lt;-</span> movies_raw <span class="sc">%&gt;%</span></span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">movieId =</span> <span class="fu">as.integer</span>(movieId),</span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">clean_title =</span> <span class="fu">str_remove</span>(title, <span class="st">"</span><span class="sc">\\</span><span class="st">s*</span><span class="sc">\\</span><span class="st">(</span><span class="sc">\\</span><span class="st">d{4}</span><span class="sc">\\</span><span class="st">)</span><span class="sc">\\</span><span class="st">s*$"</span>),</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> <span class="fu">as.integer</span>(<span class="fu">str_extract</span>(title, <span class="st">"</span><span class="sc">\\</span><span class="st">((</span><span class="sc">\\</span><span class="st">d{4})</span><span class="sc">\\</span><span class="st">)"</span>) <span class="sc">%&gt;%</span> <span class="fu">str_extract</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">d{4}"</span>))</span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(movieId, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>movie_ratings_int <span class="ot">&lt;-</span> movie_ratings <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">movieId =</span> <span class="fu">as.integer</span>(movieId))</span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>top_movies <span class="ot">&lt;-</span> movie_ratings_int <span class="sc">%&gt;%</span></span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(rating_count <span class="sc">&gt;=</span> min_ratings) <span class="sc">%&gt;%</span></span>
+<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(movies_reference, <span class="at">by =</span> <span class="st">"movieId"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="at">order_by =</span> rating_mean, <span class="at">n =</span> <span class="dv">20</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">Title =</span> clean_title,</span>
+<span id="cb64-21"><a href="#cb64-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">Year =</span> year,</span>
+<span id="cb64-22"><a href="#cb64-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Avg Rating</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(rating_mean, <span class="dv">2</span>),</span>
+<span id="cb64-23"><a href="#cb64-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at"># Ratings</span><span class="st">`</span> <span class="ot">=</span> rating_count</span>
+<span id="cb64-24"><a href="#cb64-24" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb64-25"><a href="#cb64-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-26"><a href="#cb64-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Save top rated movies</span></span>
+<span id="cb64-27"><a href="#cb64-27" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(top_movies, <span class="st">"clean_data/top_rated_movies.csv"</span>)</span>
+<span id="cb64-28"><a href="#cb64-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-29"><a href="#cb64-29" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb64-30"><a href="#cb64-30" aria-hidden="true" tabindex="-1"></a>  top_movies,</span>
+<span id="cb64-31"><a href="#cb64-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">digits =</span> <span class="dv">2</span>,</span>
+<span id="cb64-32"><a href="#cb64-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Title"</span>, <span class="st">"Year"</span>, <span class="st">"Avg Rating"</span>, <span class="st">"# Ratings"</span>),</span>
+<span id="cb64-33"><a href="#cb64-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste0</span>(<span class="st">"Top 20 Rated Movies (minimum "</span>, min_ratings, <span class="st">" ratings)"</span>)</span>
+<span id="cb64-34"><a href="#cb64-34" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Top 20 Rated Movies (minimum 500 ratings)</caption>
+<colgroup>
+<col style="width: 73%">
+<col style="width: 5%">
+<col style="width: 11%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Title</th>
+<th style="text-align: right;">Year</th>
+<th style="text-align: right;">Avg Rating</th>
+<th style="text-align: right;"># Ratings</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Godfather: Part II, The</td>
+<td style="text-align: right;">1974</td>
+<td style="text-align: right;">4.26</td>
+<td style="text-align: right;">43111</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Paths of Glory</td>
+<td style="text-align: right;">1957</td>
+<td style="text-align: right;">4.18</td>
+<td style="text-align: right;">5490</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Boot, Das (Boat, The)</td>
+<td style="text-align: right;">1981</td>
+<td style="text-align: right;">4.13</td>
+<td style="text-align: right;">15804</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Prestige, The</td>
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">4.12</td>
+<td style="text-align: right;">32965</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Vertigo</td>
+<td style="text-align: right;">1958</td>
+<td style="text-align: right;">4.12</td>
+<td style="text-align: right;">19529</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark)</td>
+<td style="text-align: right;">1981</td>
+<td style="text-align: right;">4.11</td>
+<td style="text-align: right;">67408</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Oppenheimer</td>
+<td style="text-align: right;">2023</td>
+<td style="text-align: right;">4.08</td>
+<td style="text-align: right;">1152</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Red Beard (Akahige)</td>
+<td style="text-align: right;">1965</td>
+<td style="text-align: right;">4.07</td>
+<td style="text-align: right;">678</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Forrest Gump</td>
+<td style="text-align: right;">1994</td>
+<td style="text-align: right;">4.05</td>
+<td style="text-align: right;">100296</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Inherit the Wind</td>
+<td style="text-align: right;">1960</td>
+<td style="text-align: right;">4.05</td>
+<td style="text-align: right;">2230</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Memories of Murder (Salinui chueok)</td>
+<td style="text-align: right;">2003</td>
+<td style="text-align: right;">4.05</td>
+<td style="text-align: right;">2860</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Grand Day Out with Wallace and Gromit, A</td>
+<td style="text-align: right;">1989</td>
+<td style="text-align: right;">4.04</td>
+<td style="text-align: right;">8854</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Mister Roberts</td>
+<td style="text-align: right;">1955</td>
+<td style="text-align: right;">4.03</td>
+<td style="text-align: right;">2644</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Face in the Crowd, A</td>
+<td style="text-align: right;">1957</td>
+<td style="text-align: right;">4.03</td>
+<td style="text-align: right;">777</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Kind Hearts and Coronets</td>
+<td style="text-align: right;">1949</td>
+<td style="text-align: right;">4.02</td>
+<td style="text-align: right;">1216</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Coco</td>
+<td style="text-align: right;">2017</td>
+<td style="text-align: right;">4.02</td>
+<td style="text-align: right;">9638</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Moon</td>
+<td style="text-align: right;">2009</td>
+<td style="text-align: right;">4.01</td>
+<td style="text-align: right;">15744</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Crimes and Misdemeanors</td>
+<td style="text-align: right;">1989</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">4760</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Wolf Children (Okami kodomo no ame to yuki)</td>
+<td style="text-align: right;">2012</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">1192</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Strada, La</td>
+<td style="text-align: right;">1954</td>
+<td style="text-align: right;">3.99</td>
+<td style="text-align: right;">1502</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="genre-popularity-over-time" class="level2">
+<h2 class="anchored" data-anchor-id="genre-popularity-over-time">4.3 Genre Popularity Over Time</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Analyze genre trends by release year</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>genre_timeline <span class="ot">&lt;-</span> movies_tidy <span class="sc">%&gt;%</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(genre), <span class="sc">!</span><span class="fu">is.na</span>(year), year <span class="sc">&gt;=</span> <span class="dv">1980</span>, year <span class="sc">&lt;=</span> <span class="dv">2020</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(year, genre)</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Top genres by total volume</span></span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>top_genres <span class="ot">&lt;-</span> movies_tidy <span class="sc">%&gt;%</span></span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(genre)) <span class="sc">%&gt;%</span></span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(genre, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(genre)</span>
+<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-13"><a href="#cb65-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot trends for top genres</span></span>
+<span id="cb65-14"><a href="#cb65-14" aria-hidden="true" tabindex="-1"></a>genre_timeline <span class="sc">%&gt;%</span></span>
+<span id="cb65-15"><a href="#cb65-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(genre <span class="sc">%in%</span> top_genres) <span class="sc">%&gt;%</span></span>
+<span id="cb65-16"><a href="#cb65-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> n, <span class="at">color =</span> genre)) <span class="sc">+</span></span>
+<span id="cb65-17"><a href="#cb65-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb65-18"><a href="#cb65-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb65-19"><a href="#cb65-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Movies Released per Year by Top Genres"</span>,</span>
+<span id="cb65-20"><a href="#cb65-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Release Year"</span>,</span>
+<span id="cb65-21"><a href="#cb65-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Number of Movies"</span>,</span>
+<span id="cb65-22"><a href="#cb65-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Genre"</span></span>
+<span id="cb65-23"><a href="#cb65-23" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb65-24"><a href="#cb65-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb65-25"><a href="#cb65-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb65-26"><a href="#cb65-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">14</span>),</span>
+<span id="cb65-27"><a href="#cb65-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"bottom"</span></span>
+<span id="cb65-28"><a href="#cb65-28" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Assignment_E_Report_files/figure-html/genre-over-time-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="tag-rating-correlation" class="level2">
+<h2 class="anchored" data-anchor-id="tag-rating-correlation">4.4 Tag-Rating Correlation</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Join tags with ratings to see if certain tags correlate with ratings</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Focus on popular tags</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>popular_tags <span class="ot">&lt;-</span> tags_raw <span class="sc">%&gt;%</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tag =</span> <span class="fu">str_to_lower</span>(<span class="fu">str_trim</span>(tag))) <span class="sc">%&gt;%</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(tag, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="dv">15</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(tag)</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>tag_ratings <span class="ot">&lt;-</span> tags_raw <span class="sc">%&gt;%</span></span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tag =</span> <span class="fu">str_to_lower</span>(<span class="fu">str_trim</span>(tag))) <span class="sc">%&gt;%</span></span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(tag <span class="sc">%in%</span> popular_tags) <span class="sc">%&gt;%</span></span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(movie_ratings, <span class="at">by =</span> <span class="st">"movieId"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(tag) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(</span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">movies_tagged =</span> <span class="fu">n_distinct</span>(movieId),</span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_rating =</span> <span class="fu">mean</span>(rating_mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) ) <span class="sc">%&gt;%</span></span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_rating))</span>
+<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Save tag-rating correlation</span></span>
+<span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(tag_ratings, <span class="st">"clean_data/tag_ratings.csv"</span>)</span>
+<span id="cb66-18"><a href="#cb66-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-19"><a href="#cb66-19" aria-hidden="true" tabindex="-1"></a>tag_ratings <span class="sc">%&gt;%</span> <span class="fu">kable</span>( <span class="at">digits =</span> <span class="dv">2</span>,</span>
+<span id="cb66-20"><a href="#cb66-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Tag"</span>, <span class="st">"# Movies Tagged"</span>, <span class="st">"Avg Rating"</span>),</span>
+<span id="cb66-21"><a href="#cb66-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Average ratings for movies with popular tags"</span></span>
+<span id="cb66-22"><a href="#cb66-22" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Average ratings for movies with popular tags</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Tag</th>
+<th style="text-align: right;"># Movies Tagged</th>
+<th style="text-align: right;">Avg Rating</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">thought-provoking</td>
+<td style="text-align: right;">360</td>
+<td style="text-align: right;">3.91</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">twist ending</td>
+<td style="text-align: right;">386</td>
+<td style="text-align: right;">3.86</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">atmospheric</td>
+<td style="text-align: right;">817</td>
+<td style="text-align: right;">3.84</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">dark comedy</td>
+<td style="text-align: right;">735</td>
+<td style="text-align: right;">3.80</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">surreal</td>
+<td style="text-align: right;">687</td>
+<td style="text-align: right;">3.78</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cinematography</td>
+<td style="text-align: right;">757</td>
+<td style="text-align: right;">3.77</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">visually appealing</td>
+<td style="text-align: right;">481</td>
+<td style="text-align: right;">3.76</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sci-fi</td>
+<td style="text-align: right;">789</td>
+<td style="text-align: right;">3.65</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">dystopia</td>
+<td style="text-align: right;">441</td>
+<td style="text-align: right;">3.63</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">based on a book</td>
+<td style="text-align: right;">1670</td>
+<td style="text-align: right;">3.60</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">funny</td>
+<td style="text-align: right;">1486</td>
+<td style="text-align: right;">3.56</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">action</td>
+<td style="text-align: right;">1154</td>
+<td style="text-align: right;">3.55</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">romance</td>
+<td style="text-align: right;">1676</td>
+<td style="text-align: right;">3.55</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">violence</td>
+<td style="text-align: right;">2231</td>
+<td style="text-align: right;">3.53</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">comedy</td>
+<td style="text-align: right;">2009</td>
+<td style="text-align: right;">3.50</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><strong>Insight</strong>: Tags like “atmospheric”, or “thought-provoking” tend to be associated with higher-rated movies, while more generic tags show average ratings closer to the overall mean.</p>
+<hr>
+</section>
+</section>
+<section id="summary-cleaned-datasets" class="level1">
+<h1>Summary: Cleaned Datasets</h1>
+<p>All cleaned datasets have been saved to the <code>clean_data/</code> folder:</p>
+<section id="part-1-wdbd-data" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-wdbd-data">Part 1: WDBD Data</h2>
+<ul>
+<li><strong>wdbd_tidy.csv</strong>: Main tidy dataset with all indicators in long format</li>
+<li><strong>wdbd_missingness.csv</strong>: Missingness analysis by series</li>
+<li><strong>wdbd_out_of_range.csv</strong>: Percentage values outside valid range (if any)</li>
+</ul>
+</section>
+<section id="part-2-movies-data" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-movies-data">Part 2: Movies Data</h2>
+<ul>
+<li><strong>movies_tidy.csv</strong>: Tidy movies dataset with one row per movie-genre combination</li>
+<li><strong>movies_no_genre.csv</strong>: Movies without genre information</li>
+<li><strong>movie_ratings_summary.csv</strong>: Per-movie rating statistics</li>
+<li><strong>top_rated_movies.csv</strong>: Top 20 rated movies (minimum 500 ratings)</li>
+<li><strong>top_tags.csv</strong>: Top 20 most common tags</li>
+<li><strong>missing_links.csv</strong>: Movies with missing IMDb or TMDb IDs</li>
+<li><strong>genre_ratings.csv</strong>: Average ratings by genre</li>
+<li><strong>tag_ratings.csv</strong>: Tag-rating correlation analysis</li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

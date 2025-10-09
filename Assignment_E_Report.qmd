@@ -1,0 +1,631 @@
+---
+title: "Assignment E"
+format:
+  html
+editor: visual
+---
+
+# Overview
+
+1.  **World Development Bank Data (WDBD)** - economic indicators with years stored as columns
+2.  **MovieLens Data** - movie information with multiple values in single cells
+
+The analysis follows tidy data principles where:
+
+-   Each variable forms a column
+-   Each observation forms a row
+-   Each value has its own cell
+
+```{r setup, message=FALSE, warning=FALSE}
+# Load required libraries
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(knitr)
+
+# Create output directory for cleaned data
+dir.create("clean_data", showWarnings = FALSE, recursive = TRUE)
+
+# Set global options
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+```
+
+# Part 1: World Development Bank Data
+
+## 1.1 Identifying Messy Aspects
+
+The WDBD.csv dataset has several issues that violate tidy data principles:
+
+1.  **Wide format**: Years (2018-2024) are stored as separate columns instead of as values in a single Year column
+2.  **Trailing metadata**: The file contains documentation and unit information at the bottom, mixed with the data
+3.  **Multiple variables per row**: Each row contains multiple year observations for a single indicator
+4.  **Unit inconsistencies**: Different indicators use different units (%, US\$, counts) not explicitly marked in the data
+5.  **Missing value notation**: Empty strings and ".." both represent missing values
+
+## 1.2 Importing and Cleaning
+
+```{r import-wdbd}
+# Import the dataset
+wdbd_raw <- read_csv("../WDBD.csv", show_col_types = FALSE)
+
+# Preview the structure
+cat("Raw dataset dimensions:", dim(wdbd_raw), "\n")
+cat("Column names:\n")
+head(names(wdbd_raw), 15)
+```
+
+```{r clean-wdbd}
+# Remove metadata rows at the bottom
+# These are rows without valid 3-letter country codes
+wdbd_clean <- wdbd_raw %>%
+  filter(str_detect(`Country Code`, "^[A-Z]{3}$"))
+
+cat("After removing metadata rows:", dim(wdbd_clean), "\n")
+cat("Countries:", n_distinct(wdbd_clean$`Country Code`), "\n")
+cat("Series (indicators):", n_distinct(wdbd_clean$`Series Code`), "\n")
+```
+
+## 1.3 Reshaping to Tidy Format
+
+```{r reshape-wdbd}
+# Identify year columns (they follow pattern: YYYY [YRYYYY])
+year_cols <- names(wdbd_clean) %>%
+  str_subset("^\\d{4} \\[YR\\d{4}\\]$")
+
+cat("Year columns found:", length(year_cols), "\n")
+cat("Years:", year_cols[1:7])
+
+# Pivot longer: gather year columns into a single Year column
+wdbd_long <- wdbd_clean %>%
+  pivot_longer(
+    cols = all_of(year_cols),
+    names_to = "Year",
+    values_to = "Value"
+  ) %>%
+  # Extract 4-digit year from column name
+  mutate(
+    Year = as.integer(str_extract(Year, "\\d{4}")),
+    # Convert Value to numeric (handles ".." and empty strings as NA)
+    Value = as.numeric(Value)
+  )
+
+# Display summary
+cat("\nTidy dataset dimensions:", dim(wdbd_long), "\n")
+print(summary(wdbd_long))
+```
+
+```{r preview-tidy-wdbd}
+# Preview the tidy dataset
+wdbd_long %>%
+  select(`Country Name`, `Series Name`, Year, Value) %>%
+  head(10) %>%
+  kable(caption = "First 10 rows of tidy WDBD data")
+```
+
+## 1.4 Handling Units of Measure
+
+Different indicators use different units. We can classify units based on the Series Name and Series Code:
+
+```{r units-classification}
+# Create a unit classification function
+classify_unit <- function(series_name, series_code) {
+  case_when(
+    str_detect(series_name, "%") | str_detect(series_code, "\\.ZS$") ~ "Percentage",
+    str_detect(series_name, "US\\$|current") | str_detect(series_code, "\\.CD$") ~ "Currency (US$)",
+    str_detect(series_name, "per 1,?000") ~ "Rate per 1,000",
+    str_detect(series_name, "per 100") ~ "Rate per 100",
+    TRUE ~ "Other/Count"
+  )
+}
+
+# Add unit classification
+wdbd_long <- wdbd_long %>%
+  mutate(Unit = classify_unit(`Series Name`, `Series Code`))
+
+# Save the cleaned and tidy WDBD dataset
+write_csv(wdbd_long, "clean_data/wdbd_tidy.csv")
+cat("Saved tidy WDBD dataset to: clean_data/wdbd_tidy.csv\n")
+
+# Show unit distribution
+wdbd_long %>%
+  count(Unit) %>%
+  arrange(desc(n)) %>%
+  kable(caption = "Distribution of measurement units")
+```
+
+## 1.5 Data Quality Checks
+
+### Missing Values Analysis
+
+```{r missing-analysis}
+# Calculate missingness by series
+missingness <- wdbd_long %>%
+  group_by(`Series Code`, `Series Name`, Unit) %>%
+  summarise(
+    Total_Obs = n(),
+    Missing = sum(is.na(Value)),
+    Missing_Pct = round(100 * Missing / Total_Obs, 1),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(Missing_Pct))
+
+# Save missingness analysis
+write_csv(missingness, "clean_data/wdbd_missingness.csv")
+
+# Top 10 series with highest missingness
+missingness %>%
+  head(10) %>%
+  select(`Series Name`, Total_Obs, Missing, Missing_Pct) %>%
+  kable(caption = "Top 10 indicators with highest missing data percentage")
+```
+
+### Out-of-Range Values for Percentages
+
+```{r out-of-range}
+# Check percentage values outside [0, 100]
+out_of_range <- wdbd_long %>%
+  filter(Unit == "Percentage", !is.na(Value)) %>%
+  filter(Value < 0 | Value > 100)
+
+if (nrow(out_of_range) > 0) {
+  # Save out-of-range values
+  write_csv(out_of_range, "clean_data/wdbd_out_of_range.csv")
+
+  cat("Found", nrow(out_of_range), "percentage values outside [0, 100]\n")
+  out_of_range %>%
+    select(`Country Name`, `Series Name`, Year, Value) %>%
+    head(10) %>%
+    kable(caption = "Sample of out-of-range percentage values")
+} else {
+  cat("All percentage values are within valid [0, 100] range\n")
+}
+```
+
+## 1.6 Exploratory Visualizations
+
+### Access to Electricity Over Time
+
+```{r electricity-viz}
+# Filter for electricity access indicator
+electricity <- wdbd_long %>%
+  filter(`Series Code` == "EG.ELC.ACCS.ZS", !is.na(Value))
+
+# Global trend
+electricity_trend <- electricity %>%
+  group_by(Year) %>%
+  summarise(Mean_Access = mean(Value, na.rm = TRUE))
+
+ggplot(electricity_trend, aes(x = Year, y = Mean_Access)) +
+  geom_line(color = "#2563eb", size = 1.2) +
+  geom_point(color = "#2563eb", size = 3) +
+  labs(
+    title = "Global Mean Access to Electricity Over Time",
+    subtitle = "Average across all countries",
+    x = "Year",
+    y = "% of Population with Electricity Access"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14))
+```
+
+### Summary Statistics
+
+```{r wdbd-summary-stats}
+# Overall summary
+wdbd_summary <- wdbd_long %>%
+  summarise(
+    Total_Rows = n(),
+    Countries = n_distinct(`Country Code`),
+    Indicators = n_distinct(`Series Code`),
+    Years = n_distinct(Year),
+    Year_Range = paste(min(Year), "-", max(Year)),
+    Non_Missing = sum(!is.na(Value)),
+    Missing = sum(is.na(Value)),
+    Missing_Pct = round(100 * Missing / (Non_Missing + Missing), 1)
+  )
+
+t(wdbd_summary) %>%
+  as.data.frame() %>%
+  rownames_to_column("Metric") %>%
+  kable(col.names = c("Metric", "Value"),
+        caption = "WDBD Dataset Summary Statistics")
+```
+
+------------------------------------------------------------------------
+
+# Part 2: Movies Data (MovieLens)
+
+## 2.1 Identifying Messy Aspects
+
+The movies.csv file has several tidy data violations:
+
+1.  **Multiple values in one cell**: The `genres` column contains multiple pipe-separated values (e.g., "Action\|Adventure\|Sci-Fi")
+2.  **Year embedded in title**: Release year is stored within the title string instead of a separate column
+3.  **Inconsistent genre notation**: Some movies have "(no genres listed)" instead of proper NA values
+
+## 2.2 Importing Movies Data
+
+```{r import-movies}
+# Import movies dataset
+movies_raw <- read_csv("../AssignE/movies.csv", show_col_types = FALSE)
+
+cat("Movies dataset dimensions:", dim(movies_raw), "\n")
+head(movies_raw, 5) %>%
+  kable(caption = "Original movies data structure")
+```
+
+## 2.3 Tidying Movies Data
+
+```{r tidy-movies}
+# Extract year from title and create clean title
+movies_tidy <- movies_raw %>%
+  # Extract year (4 digits in parentheses at end)
+  mutate(
+    year = as.integer(str_extract(title, "\\((\\d{4})\\)$") %>% str_extract("\\d{4}")),
+    clean_title = str_remove(title, "\\s*\\(\\d{4}\\)\\s*$")
+  ) %>%
+  # Handle missing genres
+  mutate(genres = ifelse(genres == "(no genres listed)", NA_character_, genres)) %>%
+  # Split genres and create one row per genre
+  separate_rows(genres, sep = "\\|") %>%
+  # Rename for clarity
+  rename(genre = genres)
+
+cat("\nTidy movies dimensions:", dim(movies_tidy), "\n")
+cat("Unique movies:", n_distinct(movies_tidy$movieId), "\n")
+cat("Unique genres:", n_distinct(movies_tidy$genre, na.rm = TRUE), "\n")
+
+# Save the tidy movies dataset
+write_csv(movies_tidy, "clean_data/movies_tidy.csv")
+cat("Saved tidy movies dataset to: clean_data/movies_tidy.csv\n")
+```
+
+```{r preview-movies-tidy}
+head(movies_tidy)
+```
+
+```{r movies-no-genre}
+# Movies without genres
+no_genre <- movies_raw %>%
+  filter(genres == "(no genres listed)") %>%
+  select(movieId, title)
+
+# Save movies with no genres
+write_csv(no_genre, "clean_data/movies_no_genre.csv")
+
+cat("Movies with no genres listed:", nrow(no_genre), "\n")
+```
+
+## 2.4 Genre Distribution
+
+```{r genre-distribution}
+# Count movies per genre
+genre_counts <- movies_tidy %>%
+  filter(!is.na(genre)) %>%
+  count(genre, sort = TRUE)
+
+ggplot(genre_counts, aes(x = reorder(genre, n), y = n)) +
+  geom_col(fill = "#8b5cf6") +
+  coord_flip() +
+  labs(
+    title = "Number of Movies by Genre",
+    subtitle = "Note: Movies can have multiple genres",
+    x = NULL,
+    y = "Number of Movies"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14))
+```
+
+------------------------------------------------------------------------
+
+# Part 3: Extended Analysis with MovieLens Data
+
+## 3.1 Ratings Analysis
+
+```{r import-ratings}
+# Import ratings
+ratings_raw <- read_csv("../AssignE/ratings.csv", show_col_types = FALSE)
+
+cat("Ratings dataset dimensions:", dim(ratings_raw), "\n")
+cat("Unique users:", n_distinct(ratings_raw$userId), "\n")
+cat("Unique movies rated:", n_distinct(ratings_raw$movieId), "\n")
+```
+
+### Average Rating and Count per Movie
+
+```{r ratings-summary}
+# Compute per-movie statistics
+movie_ratings <- ratings_raw %>%
+  group_by(movieId) %>%
+  summarise(
+    rating_count = n(),
+    rating_mean = mean(rating, na.rm = TRUE),
+    rating_sd = sd(rating, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Save movie ratings summary
+write_csv(movie_ratings, "clean_data/movie_ratings_summary.csv")
+cat("Saved movie ratings summary to: clean_data/movie_ratings_summary.csv\n")
+
+# Summary statistics
+summary(movie_ratings) %>%
+  kable(caption = "Summary of movie rating statistics")
+```
+
+### Distribution of Ratings
+
+```{r ratings-distribution}
+# Overall rating distribution
+rating_dist <- ratings_raw %>%
+  count(rating)
+
+ggplot(rating_dist, aes(x = rating, y = n)) +
+  geom_col(fill = "#6366f1") +
+  scale_y_continuous(labels = comma) +
+  labs(
+    title = "Distribution of All Ratings",
+    x = "Rating",
+    y = "Count"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14))
+```
+
+### Ratings Over Time
+
+```{r ratings-over-time}
+# Convert timestamp to date and aggregate by month
+ratings_timeline <- ratings_raw %>%
+  mutate(
+    date = as_datetime(timestamp),
+    month = floor_date(date, "month")
+  ) %>%
+  group_by(month) %>%
+  summarise(
+    rating_count = n(),
+    avg_rating = mean(rating, na.rm = TRUE)
+  )
+
+ggplot(ratings_timeline, aes(x = month, y = rating_count)) +
+  geom_line(color = "#ef4444", size = 0.8) +
+  scale_y_continuous(labels = comma) +
+  labs(
+    title = "Rating Activity Over Time",
+    x = "Month",
+    y = "Number of Ratings"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14))
+```
+
+## 3.2 Tags Analysis
+
+```{r import-tags}
+# Import and analyze tags
+tags_raw <- read_csv("../AssignE/tags.csv", show_col_types = FALSE)
+
+cat("Tags dataset dimensions:", dim(tags_raw), "\n")
+```
+
+### Most Common Tags
+
+```{r top-tags}
+# Clean and count tags
+top_tags <- tags_raw %>%
+  mutate(tag = str_to_lower(str_trim(tag))) %>%
+  count(tag, sort = TRUE) %>%
+  head(20)
+
+# Save top tags
+write_csv(top_tags, "clean_data/top_tags.csv")
+
+ggplot(top_tags, aes(x = reorder(tag, n), y = n)) +
+  geom_col(fill = "#10b981") +
+  coord_flip() +
+  labs(
+    title = "Top 20 Most Common Tags",
+    x = NULL,
+    y = "Count"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14))
+```
+
+## 3.3 Links Analysis
+
+```{r import-links}
+# Import links dataset
+links_raw <- read_csv("../AssignE/links.csv", show_col_types = FALSE)
+
+# Check for missing identifiers
+missing_links_summary <- links_raw %>%
+  summarise(
+    Total = n(),
+    Missing_imdbId = sum(is.na(imdbId)),
+    Missing_tmdbId = sum(is.na(tmdbId)),
+    Missing_Either = sum(is.na(imdbId) | is.na(tmdbId))
+  )
+
+# Save detailed missing links data
+missing_links_detail <- links_raw %>%
+  filter(is.na(imdbId) | is.na(tmdbId))
+
+write_csv(missing_links_detail, "clean_data/missing_links.csv")
+
+missing_links_summary %>%
+  kable(caption = "Missing external identifiers in links.csv")
+```
+
+**Note on links.csv**: This file provides external identifiers (IMDb and TMDb IDs) that could be used to enrich the dataset by joining with external movie databases for additional metadata like budgets, director information, or detailed cast lists.
+
+------------------------------------------------------------------------
+
+# Part 4: Cross-Dataset Analysis
+
+## 4.1 Genre-Rating Patterns
+
+```{r genre-ratings}
+# Join movies and ratings to explore genre patterns
+genre_ratings <- movies_tidy %>%
+  filter(!is.na(genre)) %>%
+  inner_join(movie_ratings, by = "movieId") %>%
+  group_by(genre) %>%
+  summarise(
+    movie_count = n_distinct(movieId),
+    total_ratings = sum(rating_count),
+    avg_rating = mean(rating_mean, na.rm = TRUE)
+  ) %>%
+  arrange(desc(avg_rating))
+
+# Save genre ratings analysis
+write_csv(genre_ratings, "clean_data/genre_ratings.csv")
+
+genre_ratings %>%
+  kable(digits = 2, caption = "Genre statistics with average ratings")
+```
+
+```{r genre-ratings-plot}
+ggplot(genre_ratings, aes(x = reorder(genre, avg_rating), y = avg_rating)) +
+  geom_col(fill = "#f59e0b") +
+  coord_flip() +
+  labs(
+    title = "Average Rating by Genre",
+    subtitle = "Based on mean of per-movie average ratings",
+    x = NULL,
+    y = "Average Rating"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14))
+```
+
+## 4.2 Top-Rated Movies
+
+```{r top-rated-movies}
+# Identify top-rated movies (with minimum rating threshold)
+min_ratings <- 500
+
+# Ensure consistent types and one row per movie for joining
+movies_reference <- movies_raw %>%
+  transmute(
+    movieId = as.integer(movieId),
+    clean_title = str_remove(title, "\\s*\\(\\d{4}\\)\\s*$"),
+    year = as.integer(str_extract(title, "\\((\\d{4})\\)") %>% str_extract("\\d{4}"))
+  ) %>%
+  distinct(movieId, .keep_all = TRUE)
+
+movie_ratings_int <- movie_ratings %>% mutate(movieId = as.integer(movieId))
+
+top_movies <- movie_ratings_int %>%
+  filter(rating_count >= min_ratings) %>%
+  inner_join(movies_reference, by = "movieId") %>%
+  slice_max(order_by = rating_mean, n = 20, with_ties = FALSE) %>%
+  transmute(
+    Title = clean_title,
+    Year = year,
+    `Avg Rating` = round(rating_mean, 2),
+    `# Ratings` = rating_count
+  )
+
+# Save top rated movies
+write_csv(top_movies, "clean_data/top_rated_movies.csv")
+
+kable(
+  top_movies,
+  digits = 2,
+  col.names = c("Title", "Year", "Avg Rating", "# Ratings"),
+  caption = paste0("Top 20 Rated Movies (minimum ", min_ratings, " ratings)")
+)
+```
+
+## 4.3 Genre Popularity Over Time
+
+```{r genre-over-time}
+# Analyze genre trends by release year
+genre_timeline <- movies_tidy %>%
+  filter(!is.na(genre), !is.na(year), year >= 1980, year <= 2020) %>%
+  count(year, genre)
+
+# Top genres by total volume
+top_genres <- movies_tidy %>%
+  filter(!is.na(genre)) %>%
+  count(genre, sort = TRUE) %>%
+  head(8) %>%
+  pull(genre)
+
+# Plot trends for top genres
+genre_timeline %>%
+  filter(genre %in% top_genres) %>%
+  ggplot(aes(x = year, y = n, color = genre)) +
+  geom_line(size = 1) +
+  labs(
+    title = "Movies Released per Year by Top Genres",
+    x = "Release Year",
+    y = "Number of Movies",
+    color = "Genre"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "bottom"
+  )
+```
+
+## 4.4 Tag-Rating Correlation
+
+```{r tag-rating-correlation}
+# Join tags with ratings to see if certain tags correlate with ratings
+# Focus on popular tags
+popular_tags <- tags_raw %>%
+  mutate(tag = str_to_lower(str_trim(tag))) %>%
+  count(tag, sort = TRUE) %>% head(15) %>% pull(tag)
+
+tag_ratings <- tags_raw %>%
+  mutate(tag = str_to_lower(str_trim(tag))) %>%
+  filter(tag %in% popular_tags) %>%
+  inner_join(movie_ratings, by = "movieId") %>%
+  group_by(tag) %>% summarise(
+    movies_tagged = n_distinct(movieId),
+    avg_rating = mean(rating_mean, na.rm = TRUE) ) %>%
+  arrange(desc(avg_rating))
+
+# Save tag-rating correlation
+write_csv(tag_ratings, "clean_data/tag_ratings.csv")
+
+tag_ratings %>% kable( digits = 2,
+    col.names = c("Tag", "# Movies Tagged", "Avg Rating"),
+    caption = "Average ratings for movies with popular tags"
+  )
+```
+
+**Insight**: Tags like "atmospheric", or "thought-provoking" tend to be associated with higher-rated movies, while more generic tags show average ratings closer to the overall mean.
+
+------------------------------------------------------------------------
+
+# Summary: Cleaned Datasets
+
+All cleaned datasets have been saved to the `clean_data/` folder:
+
+## Part 1: WDBD Data
+
+-   **wdbd_tidy.csv**: Main tidy dataset with all indicators in long format
+-   **wdbd_missingness.csv**: Missingness analysis by series
+-   **wdbd_out_of_range.csv**: Percentage values outside valid range (if any)
+
+## Part 2: Movies Data
+
+-   **movies_tidy.csv**: Tidy movies dataset with one row per movie-genre combination
+-   **movies_no_genre.csv**: Movies without genre information
+-   **movie_ratings_summary.csv**: Per-movie rating statistics
+-   **top_rated_movies.csv**: Top 20 rated movies (minimum 500 ratings)
+-   **top_tags.csv**: Top 20 most common tags
+-   **missing_links.csv**: Movies with missing IMDb or TMDb IDs
+-   **genre_ratings.csv**: Average ratings by genre
+-   **tag_ratings.csv**: Tag-rating correlation analysis
