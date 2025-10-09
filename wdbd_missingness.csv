@@ -1,0 +1,49 @@
+Series Code,Series Name,Unit,Total_Obs,Missing,Missing_Pct
+EN.CLC.DRSK.XQ,Disaster risk reduction progress score (1-5 scale; 5=best),Other/Count,434,434,100
+SL.TLF.0714.SW.FE.TM,"Average working hours of children, study and work, female, ages 7-14 (hours per week)",Other/Count,434,434,100
+SL.TLF.0714.SW.MA.TM,"Average working hours of children, study and work, male, ages 7-14 (hours per week)",Other/Count,434,434,100
+SL.TLF.0714.SW.TM,"Average working hours of children, study and work, ages 7-14 (hours per week)",Other/Count,434,434,100
+SL.TLF.0714.WK.FE.TM,"Average working hours of children, working only, female, ages 7-14 (hours per week)",Other/Count,434,434,100
+SL.TLF.0714.WK.MA.TM,"Average working hours of children, working only, male, ages 7-14 (hours per week)",Other/Count,434,434,100
+SL.TLF.0714.WK.TM,"Average working hours of children, working only, ages 7-14 (hours per week)",Other/Count,434,434,100
+SE.PRM.TENR.FE,"Adjusted net enrollment rate, primary, female (% of primary school age children)",Percentage,434,424,97.7
+SE.PRM.TENR.MA,"Adjusted net enrollment rate, primary, male (% of primary school age children)",Percentage,434,424,97.7
+per_lm_alllm.adq_pop_tot,Adequacy of unemployment benefits and ALMP (% of total welfare of beneficiary households),Percentage,434,424,97.7
+SE.PRM.TENR,"Adjusted net enrollment rate, primary (% of primary school age children)",Percentage,434,416,95.9
+SP.REG.BRTH.ZS,Completeness of birth registration (%),Percentage,434,391,90.1
+FX.OWN.TOTL.40.ZS,"Account ownership at a financial institution or with a mobile-money-service provider, poorest 40% (% of population ages 15+)",Percentage,434,381,87.8
+FX.OWN.TOTL.60.ZS,"Account ownership at a financial institution or with a mobile-money-service provider, richest 60% (% of population ages 15+)",Percentage,434,381,87.8
+FX.OWN.TOTL.FE.ZS,"Account ownership at a financial institution or with a mobile-money-service provider, female (% of population ages 15+)",Percentage,434,381,87.8
+FX.OWN.TOTL.MA.ZS,"Account ownership at a financial institution or with a mobile-money-service provider, male (% of population ages 15+)",Percentage,434,381,87.8
+FX.OWN.TOTL.OL.ZS,"Account ownership at a financial institution or with a mobile-money-service provider, older adults (% of population ages 25+)",Percentage,434,381,87.8
+FX.OWN.TOTL.PL.ZS,"Account ownership at a financial institution or with a mobile-money-service provider, primary education or less (% of population ages 15+)",Percentage,434,381,87.8
+FX.OWN.TOTL.SO.ZS,"Account ownership at a financial institution or with a mobile-money-service provider, secondary education or more (% of population ages 15+)",Percentage,434,381,87.8
+FX.OWN.TOTL.YG.ZS,"Account ownership at a financial institution or with a mobile-money-service provider, young adults (% of population ages 15-24)",Percentage,434,381,87.8
+FX.OWN.TOTL.ZS,Account ownership at a financial institution or with a mobile-money-service provider (% of population ages 15+),Percentage,434,381,87.8
+per_sa_allsa.adq_pop_tot,Adequacy of social safety net programs (% of total welfare of beneficiary households),Percentage,434,380,87.6
+per_si_allsi.adq_pop_tot,Adequacy of social insurance programs (% of total welfare of beneficiary households),Percentage,434,379,87.3
+per_allsp.adq_pop_tot,Adequacy of social protection and labor programs (% of total welfare of beneficiary households),Percentage,434,374,86.2
+AG.LND.IRIG.AG.ZS,Agricultural irrigated land (% of total agricultural land),Percentage,434,354,81.6
+SH.HIV.INCD.TL,Adults (ages 15+) and children (ages 0-14) newly infected with HIV,Other/Count,434,238,54.8
+SH.HIV.INCD,Adults (ages 15-49) newly infected with HIV,Other/Count,434,231,53.2
+NY.ADJ.NNTY.KD.ZG,Adjusted net national income (annual % growth),Percentage,434,230,53
+NY.ADJ.SVNG.CD,"Adjusted net savings, including particulate emission damage (current US$)",Currency (US$),434,218,50.2
+NY.ADJ.AEDU.CD,Adjusted savings: education expenditure (current US$),Currency (US$),434,194,44.7
+NY.GDP.COAL.RT.ZS,Coal rents (% of GDP),Percentage,434,189,43.5
+AG.LND.AGRI.K2,Agricultural land (sq. km),Other/Count,434,185,42.6
+EG.CFT.ACCS.RU.ZS,"Access to clean fuels and technologies for cooking, rural (% of rural population)",Percentage,434,134,30.9
+EG.CFT.ACCS.UR.ZS,"Access to clean fuels and technologies for cooking, urban (% of urban population)",Percentage,434,134,30.9
+EG.CFT.ACCS.ZS,Access to clean fuels and technologies for cooking (% of population),Percentage,434,134,30.9
+AG.LND.AGRI.ZS,Agricultural land (% of land area),Percentage,434,126,29
+SM.POP.ASYS.EA,Asylum-seekers by country or territory of asylum,Other/Count,434,87,20
+EG.ELC.ACCS.RU.ZS,"Access to electricity, rural (% of rural population)",Percentage,434,72,16.6
+SM.POP.ASYS.EO,Asylum-seekers by country or territory of origin,Other/Count,434,69,15.9
+SL.EMP.MPYR.FE.ZS,"Employers, female (% of female employment) (modeled ILO estimate)",Percentage,434,64,14.7
+SL.EMP.MPYR.MA.ZS,"Employers, male (% of male employment) (modeled ILO estimate)",Percentage,434,64,14.7
+SL.EMP.MPYR.ZS,"Employers, total (% of total employment) (modeled ILO estimate)",Percentage,434,64,14.7
+EG.ELC.ACCS.UR.ZS,"Access to electricity, urban (% of urban population)",Percentage,434,62,14.3
+EG.ELC.ACCS.ZS,Access to electricity (% of population),Percentage,434,62,14.3
+SP.DYN.CDRT.IN,"Death rate, crude (per 1,000 people)","Rate per 1,000",434,62,14.3
+SP.POP.DPND,Age dependency ratio (% of working-age population),Percentage,434,0,0
+SP.POP.DPND.OL,"Age dependency ratio, old (% of working-age population)",Percentage,434,0,0
+SP.POP.DPND.YG,"Age dependency ratio, young (% of working-age population)",Percentage,434,0,0
