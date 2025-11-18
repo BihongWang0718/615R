@@ -1,0 +1,99 @@
+---
+title: "Data Quality Report"
+
+output:
+  html_document:
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Dataset Overview
+
+```{r load-data}
+# Load data with proper NA handling
+prizes <- read.csv("prizes.csv",
+                   stringsAsFactors = FALSE,
+                   na.strings = c("", "NA", "n/a"))
+
+cat("Dimensions:", nrow(prizes), "rows x", ncol(prizes), "columns\n")
+```
+
+# Missing Values
+
+```{r missing-values}
+missing_summary <- sapply(prizes, function(x) sum(is.na(x)))
+missing_pct <- round(missing_summary / nrow(prizes) * 100, 2)
+missing_df <- data.frame(
+  Column = names(missing_summary),
+  Missing_Count = missing_summary,
+  Missing_Pct = missing_pct
+)
+missing_df <- missing_df[missing_df$Missing_Count > 0, ]
+
+if (nrow(missing_df) > 0) {
+  knitr::kable(missing_df, row.names = FALSE)
+  cat("\nTotal missing:", sum(missing_summary),
+      sprintf("(%.2f%% of all cells)\n",
+              sum(missing_summary) / (nrow(prizes) * ncol(prizes)) * 100))
+} else {
+  cat("No missing values found!\n")
+}
+```
+
+# Data Integrity
+
+```{r integrity}
+cat("Duplicate Rows:", sum(duplicated(prizes)), "\n")
+
+completeness <- round((1 - sum(missing_summary) / (nrow(prizes) * ncol(prizes))) * 100, 2)
+cat("Overall Completeness:", completeness, "%\n")
+```
+
+# Key Distributions
+
+## Temporal Coverage
+
+```{r temporal}
+cat("Year Range:", min(prizes$prize_year, na.rm = TRUE), "-",
+    max(prizes$prize_year, na.rm = TRUE), "\n")
+```
+
+## Gender
+
+```{r gender}
+knitr::kable(as.data.frame(table(prizes$gender, useNA = "ifany")),
+             col.names = c("Gender", "Count"))
+```
+
+## Person Role
+
+```{r role}
+knitr::kable(as.data.frame(table(prizes$person_role, useNA = "ifany")),
+             col.names = c("Role", "Count"))
+```
+
+## Ethnicity (Top 5)
+
+```{r ethnicity}
+knitr::kable(as.data.frame(head(sort(table(prizes$ethnicity_macro), decreasing = TRUE), 5)),
+             col.names = c("Ethnicity", "Count"))
+```
+
+## Unique Entities
+
+```{r unique}
+unique_stats <- data.frame(
+  Entity = c("Prizes", "Authors", "Books", "Institutions"),
+  Count = c(length(unique(prizes$prize_alias)),
+            length(unique(prizes$person_id)),
+            length(unique(prizes$book_id)),
+            length(unique(prizes$degree_institution)))
+)
+knitr::kable(unique_stats)
+```
+
+# Conclusion
+
+**Data Quality: `r completeness`% complete, `r sum(duplicated(prizes))` duplicates**
