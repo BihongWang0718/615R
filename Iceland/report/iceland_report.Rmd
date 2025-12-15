@@ -1,0 +1,748 @@
+---
+title: 'Aging Society: Demographic Transition and Future Challenges in Iceland'
+author: "bihong Wang"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    theme: flatly
+    highlight: tango
+    code_folding: hide
+    fig_caption: true
+    df_print: paged
+subtitle: "MA615 Final Project - Fall 2025"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  fig.align = "center"
+)
+```
+
+# Executive Summary {.tabset}
+
+Iceland, a North Atlantic island nation with a population approaching 390,000, is experiencing a significant demographic transition. This report analyzes population aging trends using data from Statistics Iceland and the World Bank, spanning from 1841 to 2025, with projections through 2074.
+
+**Key Findings:**
+
+- Iceland's population has grown from 57,133 (1841) to 389,444 (2025)
+- The proportion of elderly (65+) increased from 8.1% (1960) to 15.6% (2024)
+- Iceland crossed the "aged society" threshold (14%) in 2017
+ - Population projections range from ~453,000 (Low, declining after 2050) to ~698,000 (High) by 2074
+
+---
+
+# 1. Introduction
+
+## 1.1 Background
+
+Iceland is a Nordic island country in the North Atlantic Ocean, known for its dramatic landscapes, geothermal activity, and high quality of life. Despite its small population, Iceland provides an excellent case study for demographic analysis due to its comprehensive data collection and clear trends in population aging.
+
+## 1.2 Research Questions
+
+This report addresses the following questions:
+
+1. How has Iceland's population changed over the past 184 years?
+2. What are the trends in population aging?
+3. How is the population distributed geographically?
+4. What do projections suggest about Iceland's demographic future?
+
+## 1.3 Data Sources
+
+| Source | Data | Time Range |
+|--------|------|------------|
+| Statistics Iceland | Population by age and sex | 1841-2025 |
+| Statistics Iceland | Dependency ratios | 1951-2025 |
+| Statistics Iceland | Population projections | 2026-2074 |
+| Statistics Iceland | Population by municipality | 2025 |
+| World Bank | Population 65+ (%) | 1960-2024 |
+
+---
+
+# 2. Data Preparation
+
+## 2.1 Load Required Packages
+
+```{r packages}
+library(tidyverse)
+library(ggplot2)
+library(scales)
+library(knitr)
+library(kableExtra)
+```
+
+## 2.2 Load and Clean Data
+
+```{r load-data}
+# Data paths
+data_path <- "../ICELAND-DATA-R/"
+
+# Load population by age and sex
+pop_raw <- read_csv(paste0(data_path, "population_by_age_sex.csv"), show_col_types = FALSE)
+colnames(pop_raw) <- c("Sex", "Age", "Year", "Population")
+
+pop_data <- pop_raw %>%
+  mutate(
+    Population = na_if(Population, ".."),
+    Population = as.numeric(Population),
+    Year = as.integer(Year)
+  )
+
+# Load dependency ratio
+dep_raw <- read_csv(paste0(data_path, "dependency_ratio.csv"), show_col_types = FALSE)
+colnames(dep_raw) <- c("Year", "Division", "Value")
+dep_data <- dep_raw %>% mutate(Value = as.numeric(Value))
+
+# Load projections
+proj_raw <- read_csv(paste0(data_path, "population_projection.csv"), show_col_types = FALSE)
+colnames(proj_raw) <- c("Variant", "Age", "Sex", "Year", "Population")
+
+proj_data <- proj_raw %>%
+  mutate(
+    Variant = case_when(
+      grepl("L2", Variant) ~ "Low (L2)",
+      grepl("L1", Variant) ~ "Low-Medium (L1)",
+      grepl("Median", Variant) ~ "Median",
+      grepl("H1", Variant) ~ "High-Medium (H1)",
+      grepl("H2", Variant) ~ "High (H2)",
+      TRUE ~ Variant
+    ),
+    Year = as.integer(Year),
+    Population = as.numeric(Population)
+  )
+
+# Load municipality data
+muni_raw <- read_csv(paste0(data_path, "population_by_municipality.csv"), show_col_types = FALSE)
+muni_data <- muni_raw %>%
+  select(Municipality = 1, Population = 5) %>%
+  filter(Municipality != "Total") %>%
+  mutate(Population = as.numeric(Population))
+
+# Load World Bank data
+wb_data <- read_csv(paste0(data_path, "worldbank_aging.csv"), show_col_types = FALSE) %>%
+  mutate(Year = as.integer(Year))
+
+# Load international comparison data
+comparison_data <- read_csv(paste0(data_path, "worldbank_comparison.csv"), show_col_types = FALSE) %>%
+  mutate(Year = as.integer(Year))
+```
+
+## 2.3 Data Quality Assessment
+
+### 2.3.1 Missing Value Overview
+
+```{r data-quality}
+# Check for missing values
+pop_missing <- pop_data %>%
+  summarise(
+    Total_Records = n(),
+    Missing_Population = sum(is.na(Population)),
+    Missing_Percent = round(100 * Missing_Population / Total_Records, 2)
+  )
+
+pop_missing %>%
+  kable(caption = "Missing Values in Population Data") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+### 2.3.2 Detailed NA Analysis
+
+```{r na-by-sex}
+# Check NA distribution across sex categories
+na_by_sex <- pop_data %>%
+  group_by(Sex) %>%
+  summarise(
+    Records = n(),
+    NA_Count = sum(is.na(Population)),
+    NA_Percent = round(100 * NA_Count / Records, 1),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(NA_Count))
+
+na_by_sex %>%
+  kable(caption = "Missing Values by Sex Category") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+```{r na-by-period}
+# NA distribution by time period (before/after 2022)
+na_by_period <- pop_data %>%
+  mutate(Period = case_when(
+    Year < 2022 ~ "Before 2022",
+    TRUE ~ "2022-2025"
+  )) %>%
+  group_by(Period) %>%
+  summarise(
+    Records = n(),
+    NA_Count = sum(is.na(Population)),
+    NA_Percent = round(100 * NA_Count / Records, 1),
+    .groups = "drop"
+  )
+
+na_by_period %>%
+  kable(caption = "Missing Values by Time Period") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+```{r nonbinary-details}
+# Non-binary/Other category details
+nonbinary_data <- pop_data %>%
+  filter(Sex == "Non-binary/Other") %>%
+  group_by(Year) %>%
+  summarise(
+    Records = n(),
+    Has_Data = sum(!is.na(Population)),
+    .groups = "drop"
+  ) %>%
+  filter(Has_Data > 0)
+
+cat("Non-binary/Other category has data only for years:", paste(nonbinary_data$Year, collapse = ", "))
+```
+
+### 2.3.3 NA Pattern Interpretation
+
+Upon investigation, all missing values originate from the "Non-binary/Other" sex category. The data contains four sex categories: Total, Males, Females, and Non-binary/Other.
+
+Statistics Iceland introduced the Non-binary/Other category in 2022. Therefore, records from 1841-2021 naturally have NA values for this category since the classification did not exist at that time. The Total, Males, and Females categories have zero missing values across all 185 years (1841-2025).
+
+The NA count can be explained as follows: 181 years (1841-2021) multiplied by 111 age groups yields exactly 20,091 records with missing Non-binary/Other data. From 2022 onwards, this category has complete data.
+
+For this analysis, historical trend analysis uses the Total, Males, or Females categories which have complete data. Gender-inclusive analysis would need to be restricted to 2022-2025. These NA values do not indicate data quality issues but rather reflect the evolution of gender classification in census methodology.
+
+---
+
+# 3. Historical Population Trends
+
+## 3.1 Total Population Growth
+
+```{r total-pop}
+total_pop <- pop_data %>%
+  filter(Sex == "Total", Age == "Total", !is.na(Population)) %>%
+  select(Year, Population)
+
+ggplot(total_pop, aes(x = Year, y = Population)) +
+  geom_line(color = "#003897", linewidth = 1) +
+  geom_point(color = "#003897", size = 0.5, alpha = 0.3) +
+  scale_y_continuous(labels = comma_format()) +
+  labs(
+    title = "Iceland Population Growth (1841-2025)",
+    subtitle = "From 57,000 to nearly 390,000 in 184 years",
+    x = "Year",
+    y = "Population",
+    caption = "Source: Statistics Iceland"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(color = "gray50")
+  )
+```
+
+Iceland's population has grown nearly **7-fold** since 1841. Key growth periods include:
+
+- **1900-1940**: Gradual growth from 78,000 to 120,000
+- **1945-1980**: Post-war boom, population doubled
+- **2000-present**: Continued growth with immigration
+
+## 3.2 Population Pyramids
+
+```{r pyramids, fig.height=10}
+# Function to create pyramid data
+prepare_pyramid <- function(data, year) {
+  data %>%
+    filter(Year == year, Sex %in% c("Males", "Females"), Age != "Total") %>%
+    mutate(
+      Age_Numeric = case_when(
+        Age == "100 years and over" ~ 100,
+        TRUE ~ as.numeric(gsub(" years?", "", Age))
+      ),
+      Population = ifelse(Sex == "Males", -Population, Population)
+    ) %>%
+    filter(!is.na(Age_Numeric), !is.na(Population))
+}
+
+# Create pyramids for selected years
+years_to_plot <- c(1950, 1980, 2000, 2025)
+pyramid_data <- map_dfr(years_to_plot, ~prepare_pyramid(pop_data, .x) %>% mutate(Panel = .x))
+
+ggplot(pyramid_data, aes(x = Age_Numeric, y = Population, fill = Sex)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  coord_flip() +
+  scale_y_continuous(labels = function(x) comma(abs(x))) +
+  scale_fill_manual(values = c("Males" = "#3498db", "Females" = "#e74c3c")) +
+  facet_wrap(~Panel, scales = "free_x", ncol = 2) +
+  labs(
+    title = "Population Pyramids: Iceland's Demographic Evolution",
+    x = "Age",
+    y = "Population",
+    fill = "Sex",
+    caption = "Source: Statistics Iceland"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+```
+
+The pyramids show the transition from a younger population structure (1950) to an aging one (2025).
+
+---
+
+# 4. Aging Society Analysis
+
+## 4.1 Population Aged 65+
+
+```{r aging-trend}
+ggplot(wb_data, aes(x = Year, y = Percent_65_Plus)) +
+  geom_line(color = "#e74c3c", linewidth = 1.2) +
+  geom_point(color = "#e74c3c", size = 2) +
+  geom_hline(yintercept = 7, linetype = "dashed", color = "gray50") +
+  geom_hline(yintercept = 14, linetype = "dashed", color = "gray50") +
+  geom_hline(yintercept = 21, linetype = "dashed", color = "gray50") +
+  annotate("text", x = 1965, y = 7.5, label = "Aging Society (7%)", size = 3) +
+  annotate("text", x = 1965, y = 14.5, label = "Aged Society (14%)", size = 3) +
+  annotate("text", x = 1965, y = 21.5, label = "Super-Aged (21%)", size = 3) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(
+    title = "Population Aged 65 and Over in Iceland",
+    subtitle = "Iceland crossed the 'Aged Society' threshold (14%) in 2017",
+    x = "Year",
+    y = "Percentage of Total Population",
+    caption = "Source: World Bank"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+**Demographic Thresholds:**
+
+- **Aging Society** (7%): Existing statistics show Iceland was already an aging society by 1960
+- **Aged Society** (14%): Crossed in 2017
+- **Super-Aged Society** (21%): Projected within the next decades
+
+## 4.2 Age Structure Evolution
+
+```{r age-structure}
+# Calculate age groups
+age_groups <- pop_data %>%
+  filter(Age != "Total", Sex == "Total", !is.na(Population)) %>%
+  mutate(
+    Age_Numeric = case_when(
+      Age == "100 years and over" ~ 100,
+      TRUE ~ as.numeric(gsub(" years?", "", Age))
+    ),
+    Age_Group = case_when(
+      Age_Numeric < 20 ~ "0-19 years",
+      Age_Numeric < 65 ~ "20-64 years",
+      TRUE ~ "65+ years"
+    )
+  ) %>%
+  filter(!is.na(Age_Numeric)) %>%
+  group_by(Year, Age_Group) %>%
+  summarise(Population = sum(Population, na.rm = TRUE), .groups = "drop") %>%
+  group_by(Year) %>%
+  mutate(Proportion = 100 * Population / sum(Population)) %>%
+  ungroup() %>%
+  mutate(Age_Group = factor(Age_Group, levels = c("0-19 years", "20-64 years", "65+ years")))
+
+ggplot(age_groups, aes(x = Year, y = Proportion, fill = Age_Group)) +
+  geom_area(alpha = 0.8) +
+  scale_fill_manual(values = c(
+    "0-19 years" = "#2ecc71",
+    "20-64 years" = "#3498db",
+    "65+ years" = "#e74c3c"
+  )) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(
+    title = "Age Structure Evolution in Iceland",
+    subtitle = "Shift from youth-dominant to aging population",
+    x = "Year",
+    y = "Percentage of Population",
+    fill = "Age Group",
+    caption = "Source: Statistics Iceland"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+```
+
+## 4.3 Dependency Ratios
+
+```{r dependency}
+ratios <- dep_data %>%
+  filter(Division %in% c("Dependency ratio", "Young age ratio", "Old age ratio"))
+
+ggplot(ratios, aes(x = Year, y = Value, color = Division, group = Division)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c(
+    "Dependency ratio" = "#003897",
+    "Young age ratio" = "#2ecc71",
+    "Old age ratio" = "#e74c3c"
+  )) +
+  labs(
+    title = "Dependency Ratios in Iceland",
+    subtitle = "Old age ratio rising while young age ratio declining",
+    x = "Year (5-year periods)",
+    y = "Ratio",
+    color = "Type",
+    caption = "Source: Statistics Iceland"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
+
+The dependency data shows interesting temporal patterns. The total dependency ratio peaked around 1966 at approximately 109, subsequently declining to about 67 by 2020. This overall decline masks divergent trends in its components: the young age ratio decreased substantially from around 91 in the 1960s to 42 in 2020, while the old age ratio increased steadily from 17 to 25 over the same period.
+
+---
+
+# 5. Geographic Distribution
+
+## 5.1 Population by Municipality
+
+```{r municipality-table}
+muni_data %>%
+  arrange(desc(Population)) %>%
+  head(15) %>%
+  mutate(
+    Rank = row_number(),
+    Population_Fmt = format(Population, big.mark = ","),
+    Percent = paste0(round(100 * Population / 389444, 1), "%")
+  ) %>%
+  select(Rank, Municipality, Population = Population_Fmt, Percent) %>%
+  kable(caption = "Top 15 Municipalities in Iceland (2025) - Total population: 389,444") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+## 5.2 Population Distribution Map
+
+```{r static-map, fig.height=8}
+# Approximate coordinates for major municipalities
+muni_coords <- tribble(
+  ~Municipality, ~lat, ~lon,
+  "Reykjavikurborg", 64.1466, -21.9426,
+  "Kopavogsbaer", 64.1053, -21.9098,
+  "Hafnarfjardarkaupstadur", 64.0671, -21.9377,
+  "Akureyrarbaer", 65.6885, -18.1262,
+  "Reykjanesbaer", 63.9972, -22.5621,
+  "Gardabaer", 64.0894, -21.9227,
+  "Mosfellsbaer", 64.1667, -21.6972,
+  "Sveitarfelagid Arborg", 63.8667, -20.8167,
+  "Seltjarnarnesbaer", 64.1548, -22.0041,
+  "Akraneskaupstadur", 64.3222, -22.0778,
+  "Vestmannaeyjabaer", 63.4383, -20.2689
+)
+
+map_data <- muni_data %>%
+  left_join(muni_coords, by = "Municipality") %>%
+  filter(!is.na(lat))
+
+ggplot(map_data, aes(x = lon, y = lat)) +
+  geom_point(aes(size = Population, color = Population), alpha = 0.7) +
+  geom_text(aes(label = Municipality), vjust = -1, size = 2.5, check_overlap = TRUE) +
+  scale_size_continuous(range = c(3, 20), labels = comma_format()) +
+  scale_color_gradient(low = "#a6bddb", high = "#023858", labels = comma_format()) +
+  labs(
+    title = "Population Distribution in Iceland (2025)",
+    subtitle = "Circle size and color indicate population",
+    x = "Longitude",
+    y = "Latitude",
+    size = "Population",
+    color = "Population",
+    caption = "Source: Statistics Iceland"
+  ) +
+  coord_fixed(ratio = 2) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
+```
+
+The map reveals a stark geographic concentration. The Greater Reykjavik Area alone accounts for over 60% of the national population. Outside the capital region, Akureyri stands as the largest urban center with approximately 20,000 residents. This southwest concentration reflects both historical settlement patterns and modern economic opportunities.
+
+---
+
+# 6. Future Projections
+
+## 6.1 Projection Scenarios
+
+```{r projections}
+proj_totals <- proj_data %>%
+  filter(Sex == "Total", Age == "Total") %>%
+  select(Variant, Year, Population)
+
+ggplot(proj_totals, aes(x = Year, y = Population, color = Variant)) +
+  geom_line(linewidth = 1) +
+  scale_y_continuous(labels = comma_format()) +
+  scale_color_manual(values = c(
+    "Low (L2)" = "#e74c3c",
+    "Low-Medium (L1)" = "#f39c12",
+    "Median" = "#2ecc71",
+    "High-Medium (H1)" = "#3498db",
+    "High (H2)" = "#9b59b6"
+  )) +
+  labs(
+    title = "Population Projections for Iceland (2026-2074)",
+    subtitle = "Five scenarios from Statistics Iceland",
+    x = "Year",
+    y = "Projected Population",
+    color = "Scenario",
+    caption = "Source: Statistics Iceland"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
+```
+
+## 6.2 Projected Population Summary
+
+```{r projection-table}
+proj_totals %>%
+  filter(Year %in% c(2030, 2040, 2050, 2060, 2074)) %>%
+  pivot_wider(names_from = Year, values_from = Population) %>%
+  mutate(across(where(is.numeric), ~format(.x, big.mark = ","))) %>%
+  kable(caption = "Projected Population by Scenario - Selected years: 2030, 2040, 2050, 2060, 2074") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+The projection scenarios diverge substantially over time. Under the median scenario, population reaches approximately 554,000 by 2074. The high scenario (H2) suggests population could approach 700,000, while the low scenario (L2) shows a different trajectory—peaking at around 483,000 in 2050 before declining to approximately 453,000 by 2074.
+
+---
+
+# 7. Statistical Modeling
+
+## 7.1 Exponential Growth Model
+
+We fit an exponential growth model to the historical population data to understand long-term growth patterns.
+
+**Model:** $P(t) = P_0 \times e^{r(t - t_0)}$
+
+Where:
+
+- $P(t)$ = Population at year $t$
+- $P_0$ = Initial population
+- $r$ = Growth rate
+- $t_0$ = Base year
+
+```{r exp-model}
+# Fit exponential growth model
+lm_log <- lm(log(Population) ~ Year, data = total_pop)
+
+# Extract parameters
+r <- coef(lm_log)[2]
+a <- exp(coef(lm_log)[1])
+base_year <- min(total_pop$Year)
+
+# Model statistics
+r_squared <- summary(lm_log)$r.squared
+annual_growth <- (exp(r) - 1) * 100
+doubling_time <- log(2) / r
+
+# Create model summary table
+model_stats <- data.frame(
+  Metric = c("R-squared", "Annual Growth Rate", "Doubling Time", "Growth Rate (r)"),
+  Value = c(
+    paste0(round(r_squared * 100, 1), "%"),
+    paste0(round(annual_growth, 2), "%"),
+    paste0(round(doubling_time, 1), " years"),
+    round(r, 5)
+  )
+)
+
+model_stats %>%
+  kable(caption = "Exponential Growth Model Statistics") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+```{r exp-model-plot, fig.height=5}
+# Add fitted values
+total_pop_fitted <- total_pop %>%
+  mutate(
+    Fitted = a * exp(r * (Year - base_year))
+  )
+
+ggplot(total_pop_fitted, aes(x = Year)) +
+  geom_point(aes(y = Population), color = "#3498db", alpha = 0.5, size = 1) +
+  geom_line(aes(y = Fitted), color = "#e74c3c", linewidth = 1) +
+  scale_y_continuous(labels = comma_format()) +
+  labs(
+    title = "Exponential Growth Model Fit",
+    subtitle = paste0("Model: P = ", round(a, 0), " × exp(", round(r, 5), " × (Year - ", base_year, "))"),
+    x = "Year",
+    y = "Population",
+    caption = paste0("R² = ", round(r_squared * 100, 1), "%")
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+## 7.2 Aging Trend Model
+
+We model the trend in population aging (65+ percentage) to predict when Iceland might reach "super-aged society" status.
+
+```{r aging-model}
+# Fit linear and quadratic models
+lm_linear <- lm(Percent_65_Plus ~ Year, data = wb_data)
+lm_quadratic <- lm(Percent_65_Plus ~ Year + I(Year^2), data = wb_data)
+
+# Compare models using AIC
+aic_comparison <- data.frame(
+  Model = c("Linear", "Quadratic"),
+  AIC = c(AIC(lm_linear), AIC(lm_quadratic)),
+  R_squared = c(summary(lm_linear)$r.squared, summary(lm_quadratic)$r.squared)
+)
+
+aic_comparison %>%
+  mutate(
+    AIC = round(AIC, 1),
+    R_squared = paste0(round(R_squared * 100, 1), "%")
+  ) %>%
+  kable(caption = "Model Comparison: Linear vs Quadratic") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+# Use the better model
+best_model <- if (AIC(lm_quadratic) < AIC(lm_linear) - 2) lm_quadratic else lm_linear
+model_type <- if (AIC(lm_quadratic) < AIC(lm_linear) - 2) "Quadratic" else "Linear"
+```
+
+```{r aging-prediction}
+# Project to 2060 (extended to capture 21% threshold)
+future_years <- data.frame(Year = 2025:2060)
+future_years$Predicted <- predict(best_model, newdata = future_years)
+
+# Find when 21% threshold is crossed
+threshold_year <- future_years %>%
+  filter(Predicted >= 21) %>%
+  slice(1) %>%
+  pull(Year)
+```
+
+```{r aging-model-plot, fig.height=5}
+wb_fitted <- wb_data %>%
+  mutate(Fitted = predict(best_model))
+
+ggplot() +
+  geom_point(data = wb_data, aes(x = Year, y = Percent_65_Plus), color = "#e74c3c", size = 2) +
+  geom_line(data = wb_fitted, aes(x = Year, y = Fitted), color = "#3498db", linewidth = 1) +
+  geom_line(data = future_years, aes(x = Year, y = Predicted), color = "#2ecc71", linewidth = 1, linetype = "dashed") +
+  geom_hline(yintercept = 21, linetype = "dotted", color = "gray50") +
+  annotate("text", x = 1970, y = 22, label = "Super-Aged Society (21%)", size = 3, color = "gray50") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(
+    title = "Aging Trend Model with Projections",
+    subtitle = paste0(model_type, " model - Predicted to reach 21% around ", threshold_year),
+    x = "Year",
+    y = "Population 65+ (%)",
+    caption = "Blue = fitted, Green dashed = projected"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+Based on the `r model_type` regression model, Iceland is projected to reach "super-aged society" status (21% aged 65+) around `r threshold_year`. The model explains `r round(summary(best_model)$r.squared * 100, 1)`% of the variance in aging trends. Given the accelerating nature of this trend, proactive policy interventions may be warranted.
+
+---
+
+# 8. International Comparison
+
+## 8.1 Iceland in Nordic Context
+
+Comparing Iceland with other Nordic countries and Japan provides valuable context for understanding aging trends.
+
+```{r comparison-chart, fig.height=6}
+# Color palette for countries
+country_colors <- c(
+  "Iceland" = "#003897",
+  "Norway" = "#BA0C2F",
+  "Sweden" = "#006AA7",
+  "Denmark" = "#C8102E",
+  "Finland" = "#003580",
+  "Japan" = "#BC002D")
+
+ggplot(comparison_data, aes(x = Year, y = Percent_65_Plus, color = Country)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  geom_hline(yintercept = 7, linetype = "dotted", color = "gray50", alpha = 0.5) +
+  geom_hline(yintercept = 14, linetype = "dashed", color = "gray50", alpha = 0.5) +
+  geom_hline(yintercept = 21, linetype = "solid", color = "gray50", alpha = 0.5) +
+  scale_color_manual(values = country_colors) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  annotate("text", x = 1965, y = 8, label = "Aging (7%)", size = 2.5, color = "gray50") +
+  annotate("text", x = 1965, y = 15, label = "Aged (14%)", size = 2.5, color = "gray50") +
+  annotate("text", x = 1965, y = 22, label = "Super-Aged (21%)", size = 2.5, color = "gray50") +
+  labs(
+    title = "Population Aged 65+: International Comparison",
+    subtitle = "Iceland compared to Nordic countries and Japan (1960-2024)",
+    x = "Year",
+    y = "Percentage of Population 65+",
+    color = "Country",
+    caption = "Source: World Bank") +theme_minimal() + theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "right")
+```
+
+## 8.2 Comparison Summary
+
+```{r comparison-table}
+comparison_summary <- comparison_data %>%
+  group_by(Country) %>%
+  summarise(
+    `1960 (%)` = round(Percent_65_Plus[Year == min(Year)], 1),
+    `2024 (%)` = round(Percent_65_Plus[Year == max(Year)], 1),
+    `Change (pp)` = round(`2024 (%)` - `1960 (%)`, 1),
+    `Annual Change` = round(`Change (pp)` / (max(Year) - min(Year)), 3),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(`2024 (%)`))
+
+comparison_summary %>%
+  kable(caption = "Aging Comparison: Iceland vs Other Countries (1960-2024)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+Several patterns emerge from this comparison. Iceland maintains the youngest population among Nordic countries, with only 15.6% aged 65+ as of 2024. Japan, with nearly 30% of its population over 65, serves as a useful benchmark for understanding what lies ahead. Among the Nordic countries, Finland is aging most rapidly and may provide relevant policy lessons for Iceland. Notably, all countries in this comparison show acceleration in aging rates over time.
+
+
+
+---
+
+# 9. Conclusion
+
+## 9.1 Summary
+
+This analysis reveals several important demographic trends in Iceland. The population has grown steadily from 57,000 in 1841 to 389,000 in 2025, representing nearly seven-fold growth over 184 years. The country has transitioned from an "aging society" to an "aged society," with the 65+ population now exceeding 15% of the total.
+
+Geographically, population distribution remains highly concentrated, with over 60% residing in the Greater Reykjavik area. Future projections from Statistics Iceland suggest population could range from approximately 453,000 (low scenario) to 698,000 (high scenario) by 2074, depending on fertility, mortality, and migration assumptions.
+
+The exponential growth model fits historical data well (R² > 95%), while aging trend analysis suggests Iceland may reach "super-aged" status around 2055. Compared to other Nordic countries, Iceland currently has the youngest population age structure, which provides time to develop policy responses.
+
+## 9.2 Policy Implications
+
+These demographic shifts have implications for multiple policy domains. Healthcare systems will need to accommodate expanded elderly care services. Pension systems may require adjustments given increasing life expectancy. Immigration policy could play a role in maintaining the working-age population. Regional development policies may need to address the growing urban-rural population imbalance.
+
+---
+
+# References
+
+1. Statistics Iceland. (2025). Population statistics. https://px.hagstofa.is/
+2. World Bank. (2024). Population ages 65 and above (% of total population). https://data.worldbank.org/

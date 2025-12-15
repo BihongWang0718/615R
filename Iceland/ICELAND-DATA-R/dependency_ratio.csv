@@ -1,0 +1,610 @@
+Year,Division,Population by age and dependency ratio 1951-2025
+1951-1955,Total,149670
+1951-1955,0-19 years,59484
+1951-1955,20-64 years,78823
+1951-1955,65 years and older,11363
+1951-1955,Dependency ratio,89.9
+1951-1955,Young age ratio,75.4
+1951-1955,Old age ratio,14.4
+1956-1960,Total,166604
+1956-1960,0-19 years,69490
+1956-1960,20-64 years,84064
+1956-1960,65 years and older,13050
+1956-1960,Dependency ratio,98.1
+1956-1960,Young age ratio,82.6
+1956-1960,Old age ratio,15.5
+1961-1965,Total,184003
+1961-1965,0-19 years,80215
+1961-1965,20-64 years,88550
+1961-1965,65 years and older,15239
+1961-1965,Dependency ratio,107.8
+1961-1965,Young age ratio,90.6
+1961-1965,Old age ratio,17.2
+1966-1970,Total,199632
+1966-1970,0-19 years,86409
+1966-1970,20-64 years,96118
+1966-1970,65 years and older,17104
+1966-1970,Dependency ratio,107.7
+1966-1970,Young age ratio,89.9
+1966-1970,Old age ratio,17.8
+1971-1975,Total,210705
+1971-1975,0-19 years,87378
+1971-1975,20-64 years,104400
+1971-1975,65 years and older,18926
+1971-1975,Dependency ratio,101.9
+1971-1975,Young age ratio,83.8
+1971-1975,Old age ratio,18.1
+1976-1980,Total,222866
+1976-1980,0-19 years,86513
+1976-1980,20-64 years,115093
+1976-1980,65 years and older,21260
+1976-1980,Dependency ratio,93.7
+1976-1980,Young age ratio,75.2
+1976-1980,Old age ratio,18.5
+1981-1985,Total,235214
+1981-1985,0-19 years,85165
+1981-1985,20-64 years,126577
+1981-1985,65 years and older,23472
+1981-1985,Dependency ratio,85.9
+1981-1985,Young age ratio,67.3
+1981-1985,Old age ratio,18.5
+1986-1990,Total,247925
+1986-1990,0-19 years,83869
+1986-1990,20-64 years,138193
+1986-1990,65 years and older,25864
+1986-1990,Dependency ratio,79.4
+1986-1990,Young age ratio,60.7
+1986-1990,Old age ratio,18.7
+1991-1995,Total,262004
+1991-1995,0-19 years,85957
+1991-1995,20-64 years,147524
+1991-1995,65 years and older,28523
+1991-1995,Dependency ratio,77.6
+1991-1995,Young age ratio,58.3
+1991-1995,Old age ratio,19.3
+1996-2000,Total,272995
+1996-2000,0-19 years,86442
+1996-2000,20-64 years,155145
+1996-2000,65 years and older,31408
+1996-2000,Dependency ratio,76.0
+1996-2000,Young age ratio,55.7
+1996-2000,Old age ratio,16.5
+2001-2005,Total,288511
+2001-2005,0-19 years,86832
+2001-2005,20-64 years,167948
+2001-2005,65 years and older,33731
+2001-2005,Dependency ratio,71.8
+2001-2005,Young age ratio,51.7
+2001-2005,Old age ratio,20.1
+2006-2010,Total,312004
+2006-2010,0-19 years,89318
+2006-2010,20-64 years,186221
+2006-2010,65 years and older,36465
+2006-2010,Dependency ratio,67.6
+2006-2010,Young age ratio,48.0
+2006-2010,Old age ratio,19.6
+1951,Total,144293
+1951,0-19 years,56531
+1951,20-64 years,76881
+1951,65 years and older,10881
+1951,Dependency ratio,87.7
+1951,Young age ratio,73.5
+1951,Old age ratio,14.2
+1952,Total,146540
+1952,0-19 years,57695
+1952,20-64 years,77714
+1952,65 years and older,11131
+1952,Dependency ratio,88.6
+1952,Young age ratio,74.2
+1952,Old age ratio,14.3
+1953,Total,148978
+1953,0-19 years,59146
+1953,20-64 years,78487
+1953,65 years and older,11345
+1953,Dependency ratio,89.8
+1953,Young age ratio,75.4
+1953,Old age ratio,14.5
+1954,Total,152506
+1954,0-19 years,61073
+1954,20-64 years,79850
+1954,65 years and older,11583
+1954,Dependency ratio,91.0
+1954,Young age ratio,76.5
+1954,Old age ratio,14.5
+1955,Total,156033
+1955,0-19 years,62977
+1955,20-64 years,81181
+1955,65 years and older,11875
+1955,Dependency ratio,92.2
+1955,Young age ratio,77.6
+1955,Old age ratio,14.6
+1956,Total,159480
+1956,0-19 years,65008
+1956,20-64 years,82334
+1956,65 years and older,12138
+1956,Dependency ratio,93.7
+1956,Young age ratio,79.0
+1956,Old age ratio,14.7
+1957,Total,162700
+1957,0-19 years,67071
+1957,20-64 years,83020
+1957,65 years and older,12609
+1957,Dependency ratio,96.0
+1957,Young age ratio,80.8
+1957,Old age ratio,15.2
+1958,Total,166831
+1958,0-19 years,69453
+1958,20-64 years,84340
+1958,65 years and older,13038
+1958,Dependency ratio,97.8
+1958,Young age ratio,82.3
+1958,Old age ratio,15.5
+1959,Total,170156
+1959,0-19 years,71710
+1959,20-64 years,84910
+1959,65 years and older,13536
+1959,Dependency ratio,100.4
+1959,Young age ratio,84.5
+1959,Old age ratio,15.9
+1960,Total,173855
+1960,0-19 years,74209
+1960,20-64 years,85716
+1960,65 years and older,13930
+1960,Dependency ratio,102.8
+1960,Young age ratio,86.6
+1960,Old age ratio,16.3
+1961,Total,177292
+1961,0-19 years,76557
+1961,20-64 years,86314
+1961,65 years and older,14421
+1961,Dependency ratio,105.4
+1961,Young age ratio,88.7
+1961,Old age ratio,16.7
+1962,Total,180765
+1962,0-19 years,78620
+1962,20-64 years,87254
+1962,65 years and older,14891
+1962,Dependency ratio,107.2
+1962,Young age ratio,90.1
+1962,Old age ratio,17.1
+1963,Total,183991
+1963,0-19 years,80334
+1963,20-64 years,88379
+1963,65 years and older,15278
+1963,Dependency ratio,108.2
+1963,Young age ratio,90.9
+1963,Old age ratio,17.3
+1964,Total,187314
+1964,0-19 years,82010
+1964,20-64 years,89667
+1964,65 years and older,15637
+1964,Dependency ratio,108.9
+1964,Young age ratio,91.5
+1964,Old age ratio,17.4
+1965,Total,190652
+1965,0-19 years,83552
+1965,20-64 years,91134
+1965,65 years and older,15966
+1965,Dependency ratio,109.2
+1965,Young age ratio,91.7
+1965,Old age ratio,17.5
+1966,Total,193919
+1966,0-19 years,84790
+1966,20-64 years,92673
+1966,65 years and older,16456
+1966,Dependency ratio,109.3
+1966,Young age ratio,91.5
+1966,Old age ratio,17.8
+1967,Total,197221
+1967,0-19 years,86069
+1967,20-64 years,94432
+1967,65 years and older,16720
+1967,Dependency ratio,108.8
+1967,Young age ratio,91.1
+1967,Old age ratio,17.7
+1968,Total,200281
+1968,0-19 years,86948
+1968,20-64 years,96312
+1968,65 years and older,17021
+1968,Dependency ratio,108.0
+1968,Young age ratio,90.3
+1968,Old age ratio,17.7
+1969,Total,202695
+1969,0-19 years,87185
+1969,20-64 years,98048
+1969,65 years and older,17462
+1969,Dependency ratio,106.7
+1969,Young age ratio,88.9
+1969,Old age ratio,17.8
+1970,Total,204042
+1970,0-19 years,87054
+1970,20-64 years,99127
+1970,65 years and older,17861
+1970,Dependency ratio,105.8
+1970,Young age ratio,87.8
+1970,Old age ratio,18.0
+1971,Total,204834
+1971,0-19 years,86469
+1971,20-64 years,100230
+1971,65 years and older,18135
+1971,Dependency ratio,104.4
+1971,Young age ratio,86.3
+1971,Old age ratio,18.1
+1972,Total,207361
+1972,0-19 years,86775
+1972,20-64 years,102039
+1972,65 years and older,18547
+1972,Dependency ratio,103.2
+1972,Young age ratio,85.0
+1972,Old age ratio,18.2
+1973,Total,210912
+1973,0-19 years,87644
+1973,20-64 years,104364
+1973,65 years and older,18904
+1973,Dependency ratio,102.1
+1973,Young age ratio,84.0
+1973,Old age ratio,18.1
+1974,Total,213722
+1974,0-19 years,87966
+1974,20-64 years,106454
+1974,65 years and older,19302
+1974,Dependency ratio,100.8
+1974,Young age ratio,82.6
+1974,Old age ratio,18.1
+1975,Total,216695
+1975,0-19 years,88038
+1975,20-64 years,108913
+1975,65 years and older,19744
+1975,Dependency ratio,99.0
+1975,Young age ratio,80.8
+1975,Old age ratio,18.1
+1976,Total,219262
+1976,0-19 years,87894
+1976,20-64 years,111177
+1976,65 years and older,20191
+1976,Dependency ratio,97.2
+1976,Young age ratio,79.1
+1976,Old age ratio,18.2
+1977,Total,221046
+1977,0-19 years,87255
+1977,20-64 years,113048
+1977,65 years and older,20743
+1977,Dependency ratio,95.5
+1977,Young age ratio,77.2
+1977,Old age ratio,18.3
+1978,Total,222552
+1978,0-19 years,86243
+1978,20-64 years,115054
+1978,65 years and older,21255
+1978,Dependency ratio,93.4
+1978,Young age ratio,75.0
+1978,Old age ratio,18.5
+1979,Total,224522
+1979,0-19 years,85714
+1979,20-64 years,117001
+1979,65 years and older,21807
+1979,Dependency ratio,91.9
+1979,Young age ratio,73.3
+1979,Old age ratio,18.6
+1980,Total,226948
+1980,0-19 years,85460
+1980,20-64 years,119185
+1980,65 years and older,22303
+1980,Dependency ratio,90.4
+1980,Young age ratio,71.7
+1980,Old age ratio,18.7
+1981,Total,229327
+1981,0-19 years,85165
+1981,20-64 years,121455
+1981,65 years and older,22707
+1981,Dependency ratio,88.8
+1981,Young age ratio,70.1
+1981,Old age ratio,18.7
+1982,Total,232182
+1982,0-19 years,85290
+1982,20-64 years,123865
+1982,65 years and older,23027
+1982,Dependency ratio,87.4
+1982,Young age ratio,68.9
+1982,Old age ratio,18.6
+1983,Total,235537
+1983,0-19 years,85403
+1983,20-64 years,126660
+1983,65 years and older,23474
+1983,Dependency ratio,86.0
+1983,Young age ratio,67.4
+1983,Old age ratio,18.5
+1984,Total,238416
+1984,0-19 years,85260
+1984,20-64 years,129269
+1984,65 years and older,23887
+1984,Dependency ratio,84.4
+1984,Young age ratio,66.0
+1984,Old age ratio,18.5
+1985,Total,240606
+1985,0-19 years,84706
+1985,20-64 years,131637
+1985,65 years and older,24263
+1985,Dependency ratio,82.8
+1985,Young age ratio,64.3
+1985,Old age ratio,18.4
+1986,Total,242203
+1986,0-19 years,83843
+1986,20-64 years,133611
+1986,65 years and older,24749
+1986,Dependency ratio,81.3
+1986,Young age ratio,62.8
+1986,Old age ratio,18.5
+1987,Total,244157
+1987,0-19 years,83168
+1987,20-64 years,135567
+1987,65 years and older,25422
+1987,Dependency ratio,80.1
+1987,Young age ratio,61.3
+1987,Old age ratio,18.8
+1988,Total,247561
+1988,0-19 years,83410
+1988,20-64 years,138240
+1988,65 years and older,25911
+1988,Dependency ratio,79.1
+1988,Young age ratio,60.3
+1988,Old age ratio,18.7
+1989,Total,251919
+1989,0-19 years,84400
+1989,20-64 years,141121
+1989,65 years and older,26398
+1989,Dependency ratio,78.5
+1989,Young age ratio,59.8
+1989,Old age ratio,18.7
+1990,Total,253785
+1990,0-19 years,84523
+1990,20-64 years,142424
+1990,65 years and older,26838
+1990,Dependency ratio,78.2
+1990,Young age ratio,59.3
+1990,Old age ratio,18.8
+1991,Total,255866
+1991,0-19 years,85033
+1991,20-64 years,143446
+1991,65 years and older,27387
+1991,Dependency ratio,78.4
+1991,Young age ratio,59.3
+1991,Old age ratio,19.1
+1992,Total,259727
+1992,0-19 years,85787
+1992,20-64 years,146015
+1992,65 years and older,27925
+1992,Dependency ratio,77.9
+1992,Young age ratio,58.8
+1992,Old age ratio,19.1
+1993,Total,262386
+1993,0-19 years,86111
+1993,20-64 years,147761
+1993,65 years and older,28514
+1993,Dependency ratio,77.6
+1993,Young age ratio,58.3
+1993,Old age ratio,19.3
+1994,Total,265064
+1994,0-19 years,86343
+1994,20-64 years,149652
+1994,65 years and older,29069
+1994,Dependency ratio,77.1
+1994,Young age ratio,57.7
+1994,Old age ratio,19.4
+1995,Total,266978
+1995,0-19 years,86511
+1995,20-64 years,150746
+1995,65 years and older,29721
+1995,Dependency ratio,77.1
+1995,Young age ratio,57.4
+1995,Old age ratio,19.7
+1996,Total,267958
+1996,0-19 years,86162
+1996,20-64 years,151400
+1996,65 years and older,30396
+1996,Dependency ratio,77.0
+1996,Young age ratio,56.9
+1996,Old age ratio,20.1
+1997,Total,269874
+1997,0-19 years,86112
+1997,20-64 years,152830
+1997,65 years and older,30932
+1997,Dependency ratio,76.6
+1997,Young age ratio,56.3
+1997,Old age ratio,20.2
+1998,Total,272381
+1998,0-19 years,86401
+1998,20-64 years,154485
+1998,65 years and older,31495
+1998,Dependency ratio,76.3
+1998,Young age ratio,55.9
+1998,Old age ratio,20.4
+1999,Total,275712
+1999,0-19 years,86717
+1999,20-64 years,157085
+1999,65 years and older,31910
+1999,Dependency ratio,75.5
+1999,Young age ratio,55.2
+1999,Old age ratio,20.3
+2000,Total,279049
+2000,0-19 years,86816
+2000,20-64 years,159925
+2000,65 years and older,32308
+2000,Dependency ratio,74.5
+2000,Young age ratio,54.3
+2000,Old age ratio,20.2
+2001,Total,283361
+2001,0-19 years,87043
+2001,20-64 years,163527
+2001,65 years and older,32791
+2001,Dependency ratio,73.3
+2001,Young age ratio,53.2
+2001,Old age ratio,20.1
+2002,Total,286575
+2002,0-19 years,86943
+2002,20-64 years,166303
+2002,65 years and older,33329
+2002,Dependency ratio,72.3
+2002,Young age ratio,52.3
+2002,Old age ratio,20.0
+2003,Total,288471
+2003,0-19 years,86631
+2003,20-64 years,168049
+2003,65 years and older,33791
+2003,Dependency ratio,71.7
+2003,Young age ratio,51.6
+2003,Old age ratio,20.1
+2004,Total,290570
+2004,0-19 years,86681
+2004,20-64 years,169738
+2004,65 years and older,34151
+2004,Dependency ratio,71.2
+2004,Young age ratio,51.1
+2004,Old age ratio,20.1
+2005,Total,293577
+2005,0-19 years,86864
+2005,20-64 years,172122
+2005,65 years and older,34591
+2005,Dependency ratio,70.6
+2005,Young age ratio,50.5
+2005,Old age ratio,20.1
+2006,Total,299891
+2006,0-19 years,87691
+2006,20-64 years,177161
+2006,65 years and older,35039
+2006,Dependency ratio,69.3
+2006,Young age ratio,49.5
+2006,Old age ratio,19.8
+2007,Total,307672
+2007,0-19 years,88484
+2007,20-64 years,183555
+2007,65 years and older,35633
+2007,Dependency ratio,67.6
+2007,Young age ratio,48.2
+2007,Old age ratio,19.4
+2008,Total,315459
+2008,0-19 years,89664
+2008,20-64 years,189386
+2008,65 years and older,36409
+2008,Dependency ratio,66.6
+2008,Young age ratio,47.3
+2008,Old age ratio,19.2
+2009,Total,319368
+2009,0-19 years,90460
+2009,20-64 years,191735
+2009,65 years and older,37173
+2009,Dependency ratio,66.6
+2009,Young age ratio,47.2
+2009,Old age ratio,19.4
+2010,Total,317630
+2010,0-19 years,90293
+2010,20-64 years,189268
+2010,65 years and older,38069
+2010,Dependency ratio,67.8
+2010,Young age ratio,47.7
+2010,Old age ratio,20.1
+2011,Total,311841
+2011,0-19 years,89227
+2011,20-64 years,183663
+2011,65 years and older,38951
+2011,Dependency ratio,69.8
+2011,Young age ratio,48.6
+2011,Old age ratio,21.2
+2012,Total,313182
+2012,0-19 years,88886
+2012,20-64 years,184225
+2012,65 years and older,40071
+2012,Dependency ratio,70.0
+2012,Young age ratio,48.2
+2012,Old age ratio,21.8
+2013,Total,315810
+2013,0-19 years,88728
+2013,20-64 years,185645
+2013,65 years and older,41437
+2013,Dependency ratio,70.1
+2013,Young age ratio,47.8
+2013,Old age ratio,22.3
+2014,Total,319718
+2014,0-19 years,88703
+2014,20-64 years,188206
+2014,65 years and older,42809
+2014,Dependency ratio,69.9
+2014,Young age ratio,47.1
+2014,Old age ratio,22.7
+2015,Total,323024
+2015,0-19 years,88617
+2015,20-64 years,190138
+2015,65 years and older,44269
+2015,Dependency ratio,69.9
+2015,Young age ratio,46.6
+2015,Old age ratio,23.3
+2016,Total,326036
+2016,0-19 years,88130
+2016,20-64 years,192083
+2016,65 years and older,45823
+2016,Dependency ratio,69.7
+2016,Young age ratio,45.9
+2016,Old age ratio,23.9
+2017,Total,332507
+2017,0-19 years,88262
+2017,20-64 years,197076
+2017,65 years and older,47169
+2017,Dependency ratio,68.7
+2017,Young age ratio,44.8
+2017,Old age ratio,23.9
+2018,Total,342183
+2018,0-19 years,88847
+2018,20-64 years,204617
+2018,65 years and older,48719
+2018,Dependency ratio,67.2
+2018,Young age ratio,43.4
+2018,Old age ratio,23.8
+2019,Total,349468
+2019,0-19 years,89273
+2019,20-64 years,209764
+2019,65 years and older,50431
+2019,Dependency ratio,66.6
+2019,Young age ratio,42.6
+2019,Old age ratio,24.0
+2020,Total,354042
+2020,0-19 years,89852
+2020,20-64 years,212086
+2020,65 years and older,52104
+2020,Dependency ratio,66.9
+2020,Young age ratio,42.4
+2020,Old age ratio,24.6
+2021,Total,358298
+2021,0-19 years,90700
+2021,20-64 years,213622
+2021,65 years and older,53976
+2021,Dependency ratio,67.7
+2021,Young age ratio,42.5
+2021,Old age ratio,25.3
+2022,Total,364917
+2022,0-19 years,92004
+2022,20-64 years,216945
+2022,65 years and older,55968
+2022,Dependency ratio,68.2
+2022,Young age ratio,42.4
+2022,Old age ratio,25.8
+2023,Total,375218
+2023,0-19 years,93595
+2023,20-64 years,223788
+2023,65 years and older,57835
+2023,Dependency ratio,67.7
+2023,Young age ratio,41.8
+2023,Old age ratio,25.8
+2024,Total,383726
+2024,0-19 years,94468
+2024,20-64 years,229494
+2024,65 years and older,59764
+2024,Dependency ratio,67.2
+2024,Young age ratio,41.2
+2024,Old age ratio,26.0
+2025,Total,389444
+2025,0-19 years,94819
+2025,20-64 years,232873
+2025,65 years and older,61752
+2025,Dependency ratio,67.2
+2025,Young age ratio,40.7
+2025,Old age ratio,26.5
